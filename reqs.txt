@@ -13,7 +13,7 @@ idna==3.7
 markdown-it-py==3.0.0
 mdurl==0.1.2
 packaging==24.1
-pydantic==2.7.0
+pydantic==2.8.2
 pydantic_core==2.20.1
 Pygments==2.18.0
 pyinstaller==6.10.0
@@ -28,4 +28,4 @@ typing_extensions==4.12.2
 urllib3==2.2.2
 uvicorn==0.30.6
 python-multipart
-aiosqlite
+aiosqlite==0.20.0
