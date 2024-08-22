@@ -4,7 +4,7 @@ import uvicorn
 from fastapi import FastAPI
 
 from const import SRV_PORT
-from middleware import AuthMiddleware, IPAddrMiddleware
+from middleware import middleware
 from router import router
 
 
@@ -14,10 +14,8 @@ class UvicornServer(uvicorn.Server):
     app: FastAPI
 
     def __init__(self):
-        self.app = FastAPI()
+        self.app = FastAPI(middleware=middleware)
         self.app.include_router(router)
-        self.app.add_middleware(IPAddrMiddleware)
-        self.app.add_middleware(AuthMiddleware)
         self.config = uvicorn.Config(self.app, host="0.0.0.0", port=SRV_PORT)
         super().__init__(self.config)
 
@@ -31,6 +29,12 @@ class ForkService(multiprocessing.Process):
     def run(self):
         us = UvicornServer()
         us.run()
+
+    def start(self):
+        from db import create_tables
+        create_tables()
+
+        super().start()
 
     def stop(self):
         # self.us.stop()
@@ -47,5 +51,3 @@ if __name__ == '__main__':
         print('stop')
         us.stop()
         us.join()
-
-

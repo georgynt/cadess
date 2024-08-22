@@ -2,14 +2,17 @@ from fastapi import File, UploadFile
 from fastapi.routing import APIRouter
 from fastapi.middleware import Middleware
 from pydantic import BaseModel
+from sqlalchemy import select
 
 from const import ServiceStatus
-from logic import Logic
+from db import ASession, User
+from logic import Logic, LogicMock
 
 
-cades: Logic = Logic()
+cades = LogicMock()
 
 router = APIRouter(prefix="/cades")
+
 
 class Cert(BaseModel):
     number: str
@@ -24,6 +27,11 @@ class Status(BaseModel):
 class Document(BaseModel):
     data: bytes
     signature: bytes
+
+
+class UserStruct(BaseModel):
+    username: str
+    password: str
 
 
 @router.get("/keys", tags=['keys'])
@@ -61,3 +69,19 @@ async def sign(file: UploadFile = File(...)) -> Document:
     signed_data = cades.sign_data(data, 'ar43n3my', False)
     return Document(data=signed_data,
                     signature=sign)
+
+
+@router.get("/users", tags=['users'])
+async def users() -> list[str]:
+    ss = ASession()
+    return [u.username for (u,) in
+            (await ss.execute(select(User)))]
+
+
+@router.post("/users", tags=['adduser'])
+async def users(user: UserStruct) -> str:
+    ss = ASession()
+    u = User(username=user.username, password=user.password)
+    ss.add(u)
+    ss.commit()
+    
