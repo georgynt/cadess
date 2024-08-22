@@ -1,10 +1,32 @@
 import asyncio
+from hashlib import md5
+
 import requests as rq
 from random import randbytes
 from io import BytesIO
 
+from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 
-URL = 'http://cades-host:8000/cades/sign'
+
+DOMAIN = 'http://cades-host:8000/cades'
+URL = f'{DOMAIN}/sign'
+
+
+class HTTPCadesAuth(HTTPBasicAuth):
+    def digest(self):
+        return md5(f"{self.username}:{self.password}".encode()).hexdigest()
+
+    def __call__(self, request):
+        request.headers['Authorization'] = "Cades %s" % self.digest()
+        return request
+
+
+def test():
+    ss = rq.session()
+    ss.auth = HTTPCadesAuth('admin', 'admin123')
+    res = rq.get(f"{DOMAIN}/status")
+    print(res)
+
 
 async def makerequest():
     def fetch():
