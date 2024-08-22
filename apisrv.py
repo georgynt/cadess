@@ -4,6 +4,7 @@ import uvicorn
 from fastapi import FastAPI
 
 from const import SRV_PORT
+from middleware import AuthMiddleware, IPAddrMiddleware
 from router import router
 
 
@@ -15,6 +16,8 @@ class UvicornServer(uvicorn.Server):
     def __init__(self):
         self.app = FastAPI()
         self.app.include_router(router)
+        self.app.add_middleware(IPAddrMiddleware)
+        self.app.add_middleware(AuthMiddleware)
         self.config = uvicorn.Config(self.app, host="0.0.0.0", port=SRV_PORT)
         super().__init__(self.config)
 

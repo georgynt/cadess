@@ -18,7 +18,7 @@ SIGNER = "CAdESCOM.CPSigner"
 SIGNED_DATA = "CAdESCOM.CadesSignedData"
 
 
-class CadesService:
+class Logic:
     def __init__(self):
         self.store = win32.Dispatch(STORE)
         self.store.Open(CAPICOM_SMART_CARD_USER_STORE,

@@ -1,18 +1,15 @@
-import signal
-from asyncio import CancelledError
-from types import FrameType
-from fastapi.routing import APIRouter
 from fastapi import File, UploadFile
+from fastapi.routing import APIRouter
+from fastapi.middleware import Middleware
 from pydantic import BaseModel
 
-from const import LOG_LEVEL, SRV_PORT, ServiceStatus, WORKERS
-from cadessrv import CadesService
+from const import ServiceStatus
+from logic import Logic
 
 
-cades: CadesService = CadesService()
+cades: Logic = Logic()
 
 router = APIRouter(prefix="/cades")
-
 
 class Cert(BaseModel):
     number: str
