@@ -12,4 +12,11 @@ Base = declarative_base()
 
 class User(Base):
     __tablename__ = 'users'
-    username = Column(String(), )
+    username = Column(String())
+    password = Column(String())
+
+class Setting(Base):
+    name = Column(String())
+    value = Column(String())
+
+class
