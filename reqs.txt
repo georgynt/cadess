@@ -29,3 +29,4 @@ urllib3==2.2.2
 uvicorn==0.30.6
 python-multipart
 aiosqlite==0.20.0
+pytz=2024.1

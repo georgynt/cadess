@@ -1,10 +1,17 @@
+import pytz
 import random
-from collections import namedtuple
-from datetime import timedelta
+import sys
+from datetime import datetime, timedelta
 
-import win32com.client as win32
-import win32timezone as w32tz
-from win32com.client import CDispatch
+from db import Session, Setting
+
+
+if sys.platform == 'win32':
+    import win32com.client as win32
+    import win32timezone as w32tz
+    from win32com.client import CDispatch
+else:
+    CDispatch = object
 
 
 # CAPICOM
@@ -22,62 +29,62 @@ SIGNER = "CAdESCOM.CPSigner"
 SIGNED_DATA = "CAdESCOM.CadesSignedData"
 
 
-class Logic:
-    def __init__(self):
-        self.store = win32.Dispatch(STORE)
-        self.store.Open(CAPICOM_SMART_CARD_USER_STORE,
-                   CAPICOM_MY_STORE,
-                   CAPICOM_STORE_OPEN_READ_ONLY)
+if sys.platform == 'win32':
+    class Logic:
+        def __init__(self):
+            self.store = win32.Dispatch(STORE)
+            self.store.Open(CAPICOM_SMART_CARD_USER_STORE,
+                       CAPICOM_MY_STORE,
+                       CAPICOM_STORE_OPEN_READ_ONLY)
 
-    @property
-    def certs(self):
-        return list(self.store.Certificates)
+        @property
+        def certs(self):
+            return list(self.store.Certificates)
 
-    @property
-    def actual_certs(self):
-        for c in self.certs:
-            if c.ValidToDate > w32tz.now():
-                yield c
+        @property
+        def actual_certs(self):
+            for c in self.certs:
+                if c.ValidToDate > w32tz.now():
+                    yield c
 
-    @property
-    def default_cert(self) -> CDispatch:
-        if not hasattr(self,'_def_cert'):
-            self._def_cert = next(self.find_cert())
-        return self._def_cert
+        @property
+        def default_cert(self) -> CDispatch:
+            if not hasattr(self,'_def_cert'):
+                self._def_cert = next(self.find_cert())
+            return self._def_cert
 
-    @default_cert.setter
-    def default_cert(self, value: str|CDispatch):
-        if isinstance(value, str):
-            self._def_cert = next(self.find_cert(value))
-        elif isinstance(value, CDispatch):
-            self._def_cert = value
-        else:
-            raise ValueError(f"{value} is not instance of str or COMObject")
+        @default_cert.setter
+        def default_cert(self, value: str|CDispatch):
+            if isinstance(value, str):
+                self._def_cert = next(self.find_cert(value))
+            elif isinstance(value, CDispatch):
+                self._def_cert = value
+            else:
+                raise ValueError(f"{value} is not instance of str or COMObject")
 
-    def find_cert(self, number_or_subject: str|None = None):
-        for cert in self.actual_certs:
-            if (number_or_subject is None or
-                    cert.SerialNumber == number_or_subject or
-                    number_or_subject in cert.SubjectName):
-                yield cert
+        def find_cert(self, number_or_subject: str|None = None):
+            for cert in self.actual_certs:
+                if (number_or_subject is None or
+                        cert.SerialNumber == number_or_subject or
+                        number_or_subject in cert.SubjectName):
+                    yield cert
 
-    def sign_data(self, data: bytes|str, key_pin: str,
-                  detached_sign: bool = True) -> bytes:
-        signer = win32.Dispatch(SIGNER)
-        signer.Certificate = self.default_cert
-        signer.KeyPin = key_pin
-        sd = win32.Dispatch(SIGNED_DATA)
-        sd.Content = data
-        return sd.SignCades(signer, CADES_BES,
-                            detached_sign, CAPICOM_ENCODE_BASE64)
-
+        def sign_data(self, data: bytes|str, key_pin: str,
+                      detached_sign: bool = True) -> bytes:
+            signer = win32.Dispatch(SIGNER)
+            signer.Certificate = self.default_cert
+            signer.KeyPin = key_pin
+            sd = win32.Dispatch(SIGNED_DATA)
+            sd.Content = data
+            return sd.SignCades(signer, CADES_BES,
+                                detached_sign, CAPICOM_ENCODE_BASE64)
 
 
 class MockCert:
     def __init__(self):
         self.SerialNumber = '12345'
         self.SubjectName = "My Certificate"
-        self.ValidToDate = w32tz.now() + timedelta(days=2)
+        self.ValidToDate = datetime.now(tz=pytz.UTC) + timedelta(days=2)
 
     @property
     def __class__(self):
@@ -96,7 +103,7 @@ class LogicMock:
     @property
     def actual_certs(self):
         for c in self.certs:
-            if c.ValidToDate > w32tz.now():
+            if c.ValidToDate > datetime.now(tz=pytz.UTC):
                 yield c
 
     @property
@@ -126,4 +133,21 @@ class LogicMock:
         return random.randbytes(1000)
 
 
+if sys.platform != 'win32':
+    Logic = LogicMock
 
+
+class Settings:
+    def __init__(self):
+        self.ss = Session()
+
+    def __getattr__(self, name):
+        s = self.ss.query(Setting).where(Setting.name==name).one_or_none()
+        return s.value
+
+    def __dir__(self):
+        _dir = super().__dir__()
+        names = [x for (x,) in self.ss.query(Setting.name)]
+        return [*_dir, *names]
+
+settings = Settings()

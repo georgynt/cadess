@@ -1,12 +1,11 @@
 from fastapi import File, UploadFile
 from fastapi.routing import APIRouter
-from fastapi.middleware import Middleware
 from pydantic import BaseModel
 from sqlalchemy import select
 
 from const import ServiceStatus
-from db import ASession, User
-from logic import Logic, LogicMock
+from db import Session, User
+from logic import LogicMock
 
 
 cades = LogicMock()
@@ -73,15 +72,14 @@ async def sign(file: UploadFile = File(...)) -> Document:
 
 @router.get("/users", tags=['users'])
 async def users() -> list[str]:
-    ss = ASession()
-    return [u.username for (u,) in
-            (await ss.execute(select(User)))]
+    async with Session.begin() as ss:
+        return [u.username for (u,) in
+                (await ss.execute(select(User)))]
 
 
 @router.post("/users", tags=['adduser'])
 async def users(user: UserStruct) -> str:
-    ss = ASession()
-    u = User(username=user.username, password=user.password)
-    ss.add(u)
-    ss.commit()
-    
+    async with Session.begin() as ss:
+        u = User(username=user.username, password=user.password)
+        ss.add(u)
+        return "OK"

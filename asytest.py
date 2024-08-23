@@ -9,6 +9,7 @@ from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 
 
 DOMAIN = 'http://cades-host:8000/cades'
+DOMAIN = 'http://localhost:8000/cades'
 URL = f'{DOMAIN}/sign'
 
 
@@ -23,8 +24,8 @@ class HTTPCadesAuth(HTTPBasicAuth):
 
 def test():
     ss = rq.session()
-    ss.auth = HTTPCadesAuth('admin', 'admin123')
-    res = rq.get(f"{DOMAIN}/status")
+    ss.auth = HTTPCadesAuth('admin', '123')
+    res = ss.get(f"{DOMAIN}/status")
     print(res)
 
 
