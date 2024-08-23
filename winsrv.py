@@ -3,6 +3,9 @@
 # import servicemanager  # Simple setup and logging
 import win32service  # Events
 import win32serviceutil  # ServiceFramework and commandline helper
+import socket
+import win32event
+import os, time
 
 from apisrv import ForkService
 
@@ -11,7 +14,17 @@ class CadesWinService(win32serviceutil.ServiceFramework):
     _svc_name_ = 'CadesService'
     _svc_display_name_ = 'CadesService'
     _svc_description_ = 'API Service for CAdES Subscription documents'
-    # _svc_display_name_ = 'API Service for CAdES Subscription documents'
+
+    def __init__(self, args):
+        win32serviceutil.ServiceFramework.__init__(self, args)
+        self.hWaitStop = win32event.CreateEvent(None, 0, 0, None)
+        socket.setdefaulttimeout(120)
+
+    @property
+    def is_alive(self) -> bool:
+        if hasattr(self,'uvisrv'):
+            return self.uvisrv.is_alive()
+        return False
 
     def SvcStop(self):
         """Stop the service"""
@@ -35,12 +48,12 @@ class CadesWinService(win32serviceutil.ServiceFramework):
 
 
 def init():
-    # if len(sys.argv) == 1:
-    #     servicemanager.Initialize()
-    #     servicemanager.PrepareToHostSingle(CadesWinService)
-    #     servicemanager.StartServiceCtrlDispatcher()
-    # else:
-    if True:
+    if len(sys.argv) == 1:
+        servicemanager.Initialize()
+        servicemanager.PrepareToHostSingle(CadesWinService)
+        servicemanager.StartServiceCtrlDispatcher()
+    else:
+    # if True:
         win32serviceutil.HandleCommandLine(CadesWinService)
 
 
