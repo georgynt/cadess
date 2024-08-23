@@ -18,21 +18,36 @@ class UvicornServer(uvicorn.Server):
     uvconf: uvicorn.Config
     app: FastAPI
 
+    def __get_file(self, name):
+        config = Config()
+        if filename := config.settings.get(name):
+            pass
+        else:
+            cfp = Path(__file__).parent.resolve()
+            if name == 'keyfile':
+                filename = str(cfp / KEYFILE_NAME)
+            elif name == 'certfile':
+                filename = str(cfp / CERTFILE_NAME)
+            else:
+                filename = str(cfp / name)
+
+        if not Path(filename).exists():
+            raise FileNotFoundError(filename)
+        return filename
+
+    keyfile = property(lambda x: x.__get_file('keyfile'))
+    certfile = property(lambda x: x.__get_file('certfile'))
+
     def __init__(self):
         config = Config()
-
-        if not Path(KEYFILE_NAME).exists():
-            raise FileNotFoundError(KEYFILE_NAME)
-        if not Path(CERTFILE_NAME).exists():
-            raise FileNotFoundError(CERTFILE_NAME)
 
         self.app = FastAPI(middleware=middleware)
         self.app.include_router(router)
         self.uvconf = uvicorn.Config(self.app,
                                      host="0.0.0.0",
                                      port=SRV_PORT,
-                                     ssl_keyfile=KEYFILE_NAME,
-                                     ssl_certfile=CERTFILE_NAME)
+                                     ssl_keyfile=self.keyfile,
+                                     ssl_certfile=self.certfile)
         super().__init__(self.uvconf)
 
     def stop(self):
