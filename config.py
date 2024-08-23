@@ -7,6 +7,10 @@ from watchdog.events import FileModifiedEvent, FileSystemEvent, FileSystemEventH
 from singleton import Singleton
 
 
+def workon_win() -> bool:
+    return sys.platform == 'win32'
+
+
 default_config_object = {
     'users': {
         'admin': 'admin123'
@@ -33,14 +37,22 @@ class Config(FileSystemEventHandler, metaclass=Singleton):
             self.refresh()
         super().__init__()
         self.observer = Observer()
-        self.observer.schedule(self, '.', True)
+        if workon_win():
+            self.observer.schedule(self, '.', True)
+        else:
+            self.observer.schedule(self, self.CONFIG_FILE, False)
         self.observer.start()
 
-    def on_modified(self, event: FileSystemEvent) -> None:
-        if (isinstance(event, FileModifiedEvent)
-                    and not event.is_directory)\
-                    and event.src_path.endswith(self.CONFIG_FILE):
-            self.refresh()
+    if workon_win():
+        def on_modified(self, event: FileSystemEvent) -> None:
+            if (isinstance(event, FileModifiedEvent)
+                        and not event.is_directory)\
+                        and event.src_path.endswith(self.CONFIG_FILE):
+                self.refresh()
+    else:
+        def on_modified(self, event: FileSystemEvent):
+            if isinstance(event, FileModifiedEvent):
+                self.refresh()
 
     def refresh(self):
         with open(self.CONFIG_FILE, 'r') as f:
