@@ -19,6 +19,8 @@ class UvicornServer(uvicorn.Server):
     app: FastAPI
 
     def __init__(self):
+        config = Config()
+        
         if not Path(KEYFILE_NAME).exists():
             raise FileNotFoundError(KEYFILE_NAME)
         if not Path(CERTFILE_NAME).exists():
