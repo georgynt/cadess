@@ -43,6 +43,7 @@ class Config(FileSystemEventHandler, metaclass=Singleton):
     def refresh(self):
         with open(self.CONFIG_FILE, 'r') as f:
             self._data = yaml.load(f, yaml.SafeLoader)
+            print(self._data)
 
     @property
     def whitelist(self) -> list[str]:
