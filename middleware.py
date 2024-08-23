@@ -1,14 +1,10 @@
-from sqlalchemy import exists, select
 from sqlalchemy.util import md5_hex
 from starlette.middleware import Middleware
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.requests import Request
 from starlette.responses import Response
 
-from db import Session, IPAddress, User
-
-
-# from sqlalchemy.ext.asyncio.
+from config import Config
 
 
 class IPAddrMiddleware(BaseHTTPMiddleware):
@@ -16,37 +12,44 @@ class IPAddrMiddleware(BaseHTTPMiddleware):
         self, request: Request, call_next: RequestResponseEndpoint
     ) -> Response:
         addr = request.client.host
-        print(addr)
-        async with Session.begin() as ss:
-            if (await ss.execute(exists(IPAddress).where(IPAddress.addr==addr).select())).scalar():
-                response = await call_next(request)
-            else:
-                response = Response("DENIED BY IP ADDRESS", status_code=403)
 
-        return response
+        config = Config()
+
+        if len(config.whitelist) > 0 and addr not in config.whitelist:
+            return Response(f'{addr} NOT IN WHITELIST!', status_code=403)
+        return await call_next(request)
 
 
 class AuthMiddleware(BaseHTTPMiddleware):
 
     AUTH_METHOD = 'Cades'
+    DEFAULT_TOKEN = "q1w2e3r4t5y6u7i8o9p0"
+
+    UNDEFENDED_URLS = (
+        '/docs',
+        '/openapi.json',
+    )
 
     def make_digest(self, username, password):
         s = f"{username}:{password}"
         return md5_hex(s)
 
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
+        config = Config()
+        if config.auth_disabled:
+            return await call_next(request)
 
-        print(request.headers)
+        if request.url.path.startswith(self.UNDEFENDED_URLS):
+            return await call_next(request)
 
         if pretoken := request.headers.get('authorization'):
             method, token = pretoken.split(' ')
             if method == self.AUTH_METHOD:
-                async with Session.begin() as ss:
-                    users = await ss.execute(select(User))
-
-                    for (u,) in users:
-                        if self.make_digest(u.username, u.password) == token:
-                            return await call_next(request)
+                if token == self.DEFAULT_TOKEN:
+                    return await call_next(request)
+                tokens = (md5_hex(f"{u}:{p}") for u,p in config.users.items())
+                if token in tokens:
+                    return await call_next(request)
 
         return Response("NOT AUTHORIZED!", status_code=403)
 

@@ -5,6 +5,7 @@ from pathlib import Path
 import uvicorn
 from fastapi import FastAPI
 
+from config import Config
 from const import SRV_PORT
 from middleware import middleware
 from router import router
@@ -14,28 +15,23 @@ CERTFILE_NAME = './certs/server.crt'
 
 class UvicornServer(uvicorn.Server):
     # server: uvicorn.Server
-    config: uvicorn.Config
+    uvconf: uvicorn.Config
     app: FastAPI
 
     def __init__(self):
-        # with (open(KEYFILE_NAME, 'r') as fk, open(CERTFILE_NAME, 'r') as fc):
-        #     keyfile = fk.read()
-        #     certfile = fc.read()
-
         if not Path(KEYFILE_NAME).exists():
             raise FileNotFoundError(KEYFILE_NAME)
         if not Path(CERTFILE_NAME).exists():
             raise FileNotFoundError(CERTFILE_NAME)
 
-
         self.app = FastAPI(middleware=middleware)
         self.app.include_router(router)
-        self.config = uvicorn.Config(self.app,
+        self.uvconf = uvicorn.Config(self.app,
                                      host="0.0.0.0",
-                                     port=8080,
+                                     port=SRV_PORT,
                                      ssl_keyfile=KEYFILE_NAME,
                                      ssl_certfile=CERTFILE_NAME)
-        super().__init__(self.config)
+        super().__init__(self.uvconf)
 
     def stop(self):
         self.force_exit = True

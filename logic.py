@@ -1,9 +1,9 @@
+from base64 import b64encode
+
 import pytz
 import random
 import sys
 from datetime import datetime, timedelta
-
-from db import Session, Setting
 
 
 if sys.platform == 'win32':
@@ -130,24 +130,8 @@ class LogicMock:
 
     def sign_data(self, data: bytes|str, key_pin: str,
                   detached_sign: bool = True) -> bytes:
-        return random.randbytes(1000)
+        return b64encode(random.randbytes(1000))
 
 
 if sys.platform != 'win32':
     Logic = LogicMock
-
-
-class Settings:
-    def __init__(self):
-        self.ss = Session()
-
-    def __getattr__(self, name):
-        s = self.ss.query(Setting).where(Setting.name==name).one_or_none()
-        return s.value
-
-    def __dir__(self):
-        _dir = super().__dir__()
-        names = [x for (x,) in self.ss.query(Setting.name)]
-        return [*_dir, *names]
-
-settings = Settings()

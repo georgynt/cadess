@@ -1,14 +1,24 @@
 from fastapi import File, UploadFile
 from fastapi.routing import APIRouter
 from pydantic import BaseModel
-from sqlalchemy import select
 
+from config import Config
 from const import ServiceStatus
-from db import Session, User
-from logic import LogicMock
+from logic import LogicMock, Logic
 
 
-cades = LogicMock()
+__cades = None
+
+def CadesLogic():
+    global __cades
+
+    cfg = Config()
+    if not __cades:
+        if cfg.fake_logic:
+            __cades = LogicMock()
+        else:
+            __cades = Logic()
+    return __cades
 
 router = APIRouter(prefix="/cades")
 
@@ -28,13 +38,16 @@ class Document(BaseModel):
     signature: bytes
 
 
-class UserStruct(BaseModel):
-    username: str
-    password: str
+class SignedResponse(BaseModel):
+    status: ServiceStatus
+    msg: str
+
 
 
 @router.get("/keys", tags=['keys'])
 async def list_keys() -> list[Cert]:
+    cades = CadesLogic()
+
     return [
         Cert(number=c.SerialNumber, name=c.SubjectName)
         for c in cades.actual_certs
@@ -43,6 +56,8 @@ async def list_keys() -> list[Cert]:
 
 @router.get("/keys/{number}", tags=['keys'])
 async def get_key_description(number: str) -> Cert|str:
+    cades = CadesLogic()
+
     if cert := next(cades.find_cert(number)):
         return Cert(number=cert.SerialNumber, name=cert.SubjectName)
     else:
@@ -51,8 +66,9 @@ async def get_key_description(number: str) -> Cert|str:
 
 @router.post("/keys/{number}", tags=['keys'])
 async def set_default_key(number: str) -> str:
-    print(number, type(number))
+    cades = CadesLogic()
     cades.default_cert = number
+
     return "OK"
 
 
@@ -62,24 +78,15 @@ async def status() -> Status:
 
 
 @router.post("/sign", tags=['sign'])
-async def sign(file: UploadFile = File(...)) -> Document:
+async def sign(file: UploadFile = File(...)) -> SignedResponse:
     data = await file.read()
-    sign = cades.sign_data(data, 'ar43n3my')
-    signed_data = cades.sign_data(data, 'ar43n3my', False)
-    return Document(data=signed_data,
-                    signature=sign)
+    config = Config()
+    cades = CadesLogic()
+
+    sign = cades.sign_data(data, config.pincode)
+    signed_data = cades.sign_data(data, config.pincode, False)
+
+    return SignedResponse(status=ServiceStatus.OK, msg='Document signed and sent to upstream')
 
 
-@router.get("/users", tags=['users'])
-async def users() -> list[str]:
-    async with Session.begin() as ss:
-        return [u.username for (u,) in
-                (await ss.execute(select(User)))]
-
-
-@router.post("/users", tags=['adduser'])
-async def users(user: UserStruct) -> str:
-    async with Session.begin() as ss:
-        u = User(username=user.username, password=user.password)
-        ss.add(u)
-        return "OK"
+# router.add

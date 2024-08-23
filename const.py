@@ -13,3 +13,7 @@ class ServiceStatus(str, Enum):
     OK = 'OK'
 
 
+class AppCase(str, Enum):
+    PY = 'py'
+    EXE = 'exe'
+    SRV = 'srv'
