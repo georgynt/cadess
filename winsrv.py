@@ -48,6 +48,8 @@ class CadesWinService(win32serviceutil.ServiceFramework):
 
 
 def init():
+    print(sys.argv)
+    
     if len(sys.argv) == 1:
         servicemanager.Initialize()
         servicemanager.PrepareToHostSingle(CadesWinService)
