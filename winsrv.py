@@ -1,6 +1,6 @@
-import sys
+# import sys
 
-import servicemanager  # Simple setup and logging
+# import servicemanager  # Simple setup and logging
 import win32service  # Events
 import win32serviceutil  # ServiceFramework and commandline helper
 

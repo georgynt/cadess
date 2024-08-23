@@ -33,11 +33,13 @@ class Config(FileSystemEventHandler, metaclass=Singleton):
             self.refresh()
         super().__init__()
         self.observer = Observer()
-        self.observer.schedule(self, self.CONFIG_FILE)
+        self.observer.schedule(self, '.', True)
         self.observer.start()
 
     def on_modified(self, event: FileSystemEvent) -> None:
-        if isinstance(event, FileModifiedEvent):
+        if (isinstance(event, FileModifiedEvent)
+                    and not event.is_directory)\
+                    and event.src_path.endswith(self.CONFIG_FILE):
             self.refresh()
 
     def refresh(self):
