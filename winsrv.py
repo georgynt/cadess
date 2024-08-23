@@ -5,7 +5,7 @@ import win32service  # Events
 import win32serviceutil  # ServiceFramework and commandline helper
 import socket
 import win32event
-import os, time
+import os, time, sys
 
 from apisrv import ForkService
 
@@ -49,7 +49,7 @@ class CadesWinService(win32serviceutil.ServiceFramework):
 
 def init():
     print(sys.argv)
-    
+
     if len(sys.argv) == 1:
         servicemanager.Initialize()
         servicemanager.PrepareToHostSingle(CadesWinService)
