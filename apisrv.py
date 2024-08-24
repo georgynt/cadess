@@ -1,5 +1,6 @@
 import asyncio
 import multiprocessing
+from logging import info
 from pathlib import Path
 
 import uvicorn
@@ -48,6 +49,7 @@ class UvicornServer(uvicorn.Server):
                                      port=SRV_PORT,
                                      ssl_keyfile=self.keyfile,
                                      ssl_certfile=self.certfile)
+        info("UvicornServer created")
         super().__init__(self.uvconf)
 
     def stop(self):

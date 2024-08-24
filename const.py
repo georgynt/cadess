@@ -6,7 +6,7 @@ if sys.platform == 'win32':
     SRV_PORT = 443
 else:
     SRV_PORT = 8080
-    
+
 LOG_LEVEL = "debug"
 WORKERS = 4
 
