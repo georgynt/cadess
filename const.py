@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-SRV_PORT = 8000
+SRV_PORT = 443
 LOG_LEVEL = "debug"
 WORKERS = 4
 

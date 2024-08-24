@@ -72,12 +72,12 @@ class ForkService(multiprocessing.Process):
 
 
 if __name__ == '__main__':
-    us = ForkService()
-    us.start()
-    try:
-        while us.is_alive():
-            us.join(10)
-    except KeyboardInterrupt as e:
-        print('stop')
-        us.stop()
-        us.join()
+    us = UvicornServer()
+    us.run()
+    #try:
+    #    while us.is_alive():
+    #        us.join(10)
+    #except KeyboardInterrupt as e:
+    #    print('stop')
+    #    us.stop()
+    #    us.join()
