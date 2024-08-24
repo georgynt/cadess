@@ -21,7 +21,7 @@ def CadesLogic():
     return __cades
 
 router = APIRouter(prefix="/cades")
-
+CadesLogic() # создадим объект заранее
 
 class Cert(BaseModel):
     number: str
