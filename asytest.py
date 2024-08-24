@@ -8,7 +8,7 @@ from io import BytesIO
 from requests.auth import HTTPBasicAuth
 
 
-DOMAIN = 'https://cades-host:8000/cades'
+DOMAIN = 'https://cades-host/cades'
 DOMAIN = 'https://localhost:8000/cades'
 URL = f'{DOMAIN}/sign'
 

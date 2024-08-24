@@ -1,4 +1,4 @@
-from fastapi import File, UploadFile
+from fastapi import File, HTTPException, UploadFile
 from fastapi.routing import APIRouter
 from pydantic import BaseModel
 
@@ -61,7 +61,7 @@ async def get_key_description(number: str) -> Cert|str:
     if cert := next(cades.find_cert(number)):
         return Cert(number=cert.SerialNumber, name=cert.SubjectName)
     else:
-        return "NOT FOUND"
+        raise HTTPException(404, "KEY NOT FOUND")
 
 
 @router.post("/keys/{number}", tags=['keys'])
@@ -81,12 +81,12 @@ async def status() -> Status:
 async def sign(file: UploadFile = File(...)) -> SignedResponse:
     data = await file.read()
     config = Config()
-    cades = CadesLogic()
-
-    sign = cades.sign_data(data, config.pincode)
-    signed_data = cades.sign_data(data, config.pincode, False)
+    try:
+        cades = CadesLogic()
+        sign = cades.sign_data(data, config.pincode)
+        signed_data = cades.sign_data(data, config.pincode, False)
+    except Exception as e:
+        raise HTTPException(422, str(e))
 
     return SignedResponse(status=ServiceStatus.OK, msg='Document signed and sent to upstream')
 
-
-# router.add
