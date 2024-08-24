@@ -5,6 +5,7 @@ import random
 import sys
 from datetime import datetime, timedelta
 from logging import info, warning, error
+from logger import logger
 
 if sys.platform == 'win32':
     import win32com.client as win32
@@ -36,9 +37,9 @@ if sys.platform == 'win32':
             self.store.Open(CAPICOM_SMART_CARD_USER_STORE,
                        CAPICOM_MY_STORE,
                        CAPICOM_STORE_OPEN_READ_ONLY)
-            info('Found RuToken store. Found certificates:')
+            logger.info('Found RuToken store. Found certificates:')
             for c in self.certs:
-                info(f"{c.SerialNumber}\n {c.SubjectName}")
+                logger.info(f"{c.SerialNumber}\n {c.SubjectName}")
 
         @property
         def certs(self):
@@ -54,7 +55,7 @@ if sys.platform == 'win32':
         def default_cert(self) -> CDispatch:
             if not hasattr(self,'_def_cert'):
                 self._def_cert = next(self.find_cert())
-            info(f'Using default cert {self._def_cert.SerialNumber}')
+            logger.info(f'Using default cert {self._def_cert.SerialNumber}')
             return self._def_cert
 
         @default_cert.setter
@@ -99,7 +100,7 @@ class LogicMock:
     def __init__(self):
         self.store = None
         self.mock_cert = MockCert()
-        warning("Working in Mock mode. No real Rutoken store is using")
+        logger.warning("Working in Mock mode. No real Rutoken store is using")
 
     @property
     def certs(self):
