@@ -37,9 +37,12 @@ if sys.platform == 'win32':
             self.store.Open(CAPICOM_SMART_CARD_USER_STORE,
                        CAPICOM_MY_STORE,
                        CAPICOM_STORE_OPEN_READ_ONLY)
-            logger.info('Found RuToken store. Found certificates:')
-            for c in self.certs:
-                logger.info(f"{c.SerialNumber}\n {c.SubjectName}")
+            if len(self.certs) > 0:
+                logger.info('Found RuToken store. Found certificates:')
+                for c in self.certs:
+                    logger.info(f"{c.SerialNumber}\n {c.SubjectName}")
+            else:
+                logger.warning("NO CERTIFICATES FOUND!")
 
         @property
         def certs(self):
