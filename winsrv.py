@@ -40,8 +40,8 @@ class CadesWinService(win32serviceutil.ServiceFramework):
             self.ReportServiceStatus(win32service.SERVICE_RUNNING)
             # Run the service
             self.uvisrv.start()
-            while self.uvisrv.is_alive():
-                self.uvisrv.join(10)
+            # while self.uvisrv.is_alive():
+            #     self.uvisrv.join(10)
         except Exception as e:
             print(e)
             self.ReportServiceStatus(win32service.SERVICE_ERROR_CRITICAL)

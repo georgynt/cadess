@@ -1,5 +1,8 @@
 import asyncio
 import multiprocessing
+from asyncio import CancelledError
+
+import logger
 from logger import info
 from pathlib import Path
 
@@ -77,7 +80,13 @@ class ForkService(multiprocessing.Process):
 
 if __name__ == '__main__':
     us = UvicornServer()
-    us.run()
+    try:
+        us.run()
+    except CancelledError as e:
+        logger.logger.info("stop")
+    except KeyboardInterrupt as e:
+        logger.logger.info("stop")
+
     #try:
     #    while us.is_alive():
     #        us.join(10)
