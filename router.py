@@ -21,7 +21,7 @@ def CadesLogic():
     return __cades
 
 router = APIRouter(prefix="/cades")
-CadesLogic() # создадим объект заранее
+# CadesLogic() так делать нельзя. При установке/удалении сервиса происходит попытка считывания. Оно не надо
 
 class Cert(BaseModel):
     number: str

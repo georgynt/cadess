@@ -12,7 +12,7 @@ from fastapi import FastAPI
 from config import Config
 from const import SRV_PORT
 from middleware import middleware
-from router import router
+from router import CadesLogic, router
 
 KEYFILE_NAME = './certs/server.key'
 CERTFILE_NAME = './certs/server.crt'
@@ -45,7 +45,8 @@ class UvicornServer(uvicorn.Server):
     certfile = property(lambda x: x.__get_file('certfile'))
 
     def __init__(self):
-        config = Config()
+        Config()
+        CadesLogic()
 
         self.app = FastAPI(middleware=middleware)
         self.app.include_router(router)
