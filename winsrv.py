@@ -1,4 +1,5 @@
 # import sys
+from asyncio import CancelledError
 
 import servicemanager  # Simple setup and logging
 import win32service  # Events
@@ -69,8 +70,12 @@ def init():
         else:
         # if True:
             win32serviceutil.HandleCommandLine(CadesWinService)
+    except CancelledError as e:
+        print("stop")
+        exit(0)
     except KeyboardInterrupt as ki:
         print("stop")
+        exit(0)
 
 
 if __name__ == '__main__':
