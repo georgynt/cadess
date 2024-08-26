@@ -61,13 +61,16 @@ class CadesWinService(win32serviceutil.ServiceFramework):
 def init():
     print(sys.argv)
 
-    if len(sys.argv) == 1:
-        servicemanager.Initialize()
-        servicemanager.PrepareToHostSingle(CadesWinService)
-        servicemanager.StartServiceCtrlDispatcher()
-    else:
-    # if True:
-        win32serviceutil.HandleCommandLine(CadesWinService)
+    try:
+        if len(sys.argv) == 1:
+            servicemanager.Initialize()
+            servicemanager.PrepareToHostSingle(CadesWinService)
+            servicemanager.StartServiceCtrlDispatcher()
+        else:
+        # if True:
+            win32serviceutil.HandleCommandLine(CadesWinService)
+    except KeyboardInterrupt as ki:
+        print("stop")
 
 
 if __name__ == '__main__':
