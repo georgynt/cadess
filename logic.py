@@ -10,6 +10,7 @@ from logger import logger
 if sys.platform == 'win32':
     import win32com.client as win32
     import win32timezone as w32tz
+    import pythoncom
     from win32com.client import CDispatch
 else:
     CDispatch = object
@@ -33,6 +34,7 @@ SIGNED_DATA = "CAdESCOM.CadesSignedData"
 if sys.platform == 'win32':
     class Logic:
         def __init__(self):
+            pythoncom.CoInitialize()
             self.store = win32.Dispatch(STORE)
             self.store.Open(CAPICOM_SMART_CARD_USER_STORE,
                        CAPICOM_MY_STORE,
