@@ -40,7 +40,7 @@ class UvicornServer(uvicorn.Server):
                 filename = str(cfp / name)
 
         if not Path(filename).exists():
-            raise FileNotFoundError(filename)
+            raise FileNotFoundError(f"{filename} NOT FOUND!")
         return filename
 
     keyfile = property(lambda x: x.__get_file('keyfile'))

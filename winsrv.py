@@ -71,7 +71,7 @@ def init():
             servicemanager.PrepareToHostSingle(CadesWinService)
             servicemanager.StartServiceCtrlDispatcher()
         else:
-            logger.addHandler(logging.FileHandler(r'C:\cadesa_wsu.log'))
+            logger.addHandler(logging.FileHandler(r'C:\cades_wsu.log'))
             win32serviceutil.HandleCommandLine(CadesWinService)
     except CancelledError as e:
         logger.info("stop")
