@@ -1,7 +1,7 @@
 # import sys
 import logging
 from asyncio import CancelledError
-from os.path import dirname, join
+from os.path import dirname, exists, join
 
 import servicemanager  # Simple setup and logging
 import win32service  # Events
@@ -17,7 +17,10 @@ from logger import formatter, logger
 def get_installation_dir():
     def fallback():
         SYSDISK_LETTER = dirname(os.environ['WINDIR'])
-        return join(SYSDISK_LETTER, 'cascades')
+        for d in ['cades', 'cascades']:
+            d = join(SYSDISK_LETTER, 'cascades')
+            if exists(d):
+                return d
 
     try: #Надо при инсталляции задать обязательно эту штуку в реестре
         import winreg as wr
