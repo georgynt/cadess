@@ -16,11 +16,9 @@ from logger import formatter, logger
 
 def get_installation_dir():
     def fallback():
-        SYSDISK_LETTER = dirname(os.environ['WINDIR'])
-        for d in ['cades', 'cascades']:
-            d = join(SYSDISK_LETTER, 'cascades')
-            if exists(d):
-                return d
+        if getattr(sys, 'flozen', False):
+            return dirname(sys.executable)
+        raise FileNotFoundError("Не найдена директория с установленной службой CasCAdES")
 
     try: #Надо при инсталляции задать обязательно эту штуку в реестре
         import winreg as wr
@@ -35,13 +33,13 @@ def get_installation_dir():
         except FileNotFoundError:
             return fallback()
 
-
     except Exception as ex:
         logger.error(ex)
         return fallback()
 
 
 SERVICE_WORKDIR = get_installation_dir()
+
 
 
 def win_excepthook(excType, excValue, traceback, logger=logger):
@@ -101,13 +99,19 @@ class CadesWinService(win32serviceutil.ServiceFramework):
 
 
 def init():
-    file_h = logging.FileHandler(r'C:\cades.log')
-    file_h.setFormatter(formatter)
-    logger.addHandler(file_h)
-    logger.debug(sys.argv)
-    logger.debug(f"workdir = {os.getcwd()}")
+    os.chdir(get_installation_dir())
 
-    os.chdir(SERVICE_WORKDIR)
+    file_h = logging.FileHandler(r'C:\cades.log')
+    file2_h = logging.FileHandler(r'cades.log')
+    file_h.setFormatter(formatter)
+    file2_h.setFormatter(formatter)
+    logger.addHandler(file_h)
+    logger.addHandler(file2_h)
+
+    logger.debug(sys.argv)
+    logger.debug(sys.path)
+    logger.debug(sys.executable)
+    logger.debug(f"workdir = {os.getcwd()}")
 
     try:
         if len(sys.argv) == 1:
