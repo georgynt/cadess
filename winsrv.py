@@ -9,6 +9,7 @@ import win32event
 import os, time, sys
 
 from apisrv import ForkService, UvicornServer
+from logger import logger
 
 
 class CadesWinService(win32serviceutil.ServiceFramework):
@@ -55,12 +56,12 @@ class CadesWinService(win32serviceutil.ServiceFramework):
             self.uvisrv.run()
             win32event.WaitForSingleObject(self.hWaitStop, win32event.INFINITE)
         except Exception as e:
-            print(e)
+            logger.error(e)
             self.ReportServiceStatus(win32service.SERVICE_ERROR_CRITICAL)
 
 
 def init():
-    print(sys.argv)
+    logger.debug(sys.argv)
 
     try:
         if len(sys.argv) == 1:
@@ -71,10 +72,10 @@ def init():
         # if True:
             win32serviceutil.HandleCommandLine(CadesWinService)
     except CancelledError as e:
-        print("stop")
+        logger.info("stop")
         exit(0)
     except KeyboardInterrupt as ki:
-        print("stop")
+        logger.info("stop")
         exit(0)
 
 

@@ -3,4 +3,5 @@ from logging import *
 
 logger = getLogger()
 logger.setLevel(logging.DEBUG)
-logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
+logger.addHandler(logging.StreamHandler(sys.stdout))
+logger.addHandler(logging.FileHandler(r"C:\cades.log"))
