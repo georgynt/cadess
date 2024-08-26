@@ -7,7 +7,7 @@ import socket
 import win32event
 import os, time, sys
 
-from apisrv import ForkService
+from apisrv import ForkService, UvicornServer
 
 
 class CadesWinService(win32serviceutil.ServiceFramework):
@@ -32,16 +32,27 @@ class CadesWinService(win32serviceutil.ServiceFramework):
         self.uvisrv.stop()
         self.ReportServiceStatus(win32service.SERVICE_STOPPED)
 
+    # def SvcDoRun(self):
+    #     """Start the service; does not return until stopped"""
+    #     try:
+    #         self.ReportServiceStatus(win32service.SERVICE_START_PENDING)
+    #         self.uvisrv = ForkService()
+    #         self.ReportServiceStatus(win32service.SERVICE_RUNNING)
+    #         # Run the service
+    #         self.uvisrv.start()
+    #         # while self.uvisrv.is_alive():
+    #         #     self.uvisrv.join(10)
+    #         win32event.WaitForSingleObject(self.hWaitStop, win32event.INFINITE)
+    #     except Exception as e:
+    #         print(e)
+    #         self.ReportServiceStatus(win32service.SERVICE_ERROR_CRITICAL)
     def SvcDoRun(self):
-        """Start the service; does not return until stopped"""
         try:
             self.ReportServiceStatus(win32service.SERVICE_START_PENDING)
-            self.uvisrv = ForkService()
+            self.uvisrv = UvicornServer()
             self.ReportServiceStatus(win32service.SERVICE_RUNNING)
-            # Run the service
-            self.uvisrv.start()
-            # while self.uvisrv.is_alive():
-            #     self.uvisrv.join(10)
+            self.uvisrv.run()
+            win32event.WaitForSingleObject(self.hWaitStop, win32event.INFINITE)
         except Exception as e:
             print(e)
             self.ReportServiceStatus(win32service.SERVICE_ERROR_CRITICAL)
