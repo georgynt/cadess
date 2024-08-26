@@ -70,10 +70,11 @@ class CadesWinService(win32serviceutil.ServiceFramework):
 
 
 def init():
-    file_h = logging.FileHandler(r'C:\cades_sm.log' if len(sys.argv) == 1 else r'C:\cades_wsu.log')
+    file_h = logging.FileHandler(r'C:\cades.log')
     file_h.setFormatter(formatter)
     logger.addHandler(file_h)
     logger.debug(sys.argv)
+    logger.debug(f"workdir = {os.getcwd()}")
 
     try:
         if len(sys.argv) == 1:
