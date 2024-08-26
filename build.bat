@@ -1,1 +1,1 @@
-pyinstaller winsrv.spec
+pyinstaller winsrv.spec -y

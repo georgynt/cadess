@@ -1,7 +1,14 @@
-import logging, sys, os
+import logging
+import sys
 from logging import *
-from os.path import join
+
 
 logger = getLogger()
 logger.setLevel(logging.DEBUG)
-logger.addHandler(logging.StreamHandler(sys.stdout))
+
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+stm_h = logging.StreamHandler(sys.stdout)
+stm_h.setFormatter(formatter)
+
+logger.addHandler(stm_h)

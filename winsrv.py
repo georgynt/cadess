@@ -11,7 +11,7 @@ import os, time, sys
 
 
 from apisrv import ForkService, UvicornServer
-from logger import logger
+from logger import formatter, logger
 
 
 class CadesWinService(win32serviceutil.ServiceFramework):
@@ -62,16 +62,17 @@ class CadesWinService(win32serviceutil.ServiceFramework):
 
 
 def init():
+    file_h = logging.FileHandler(r'C:\cades_sm.log' if len(sys.argv) == 1 else r'C:\cades_wsu.log')
+    file_h.setFormatter(formatter)
+    logger.addHandler(file_h)
     logger.debug(sys.argv)
 
     try:
         if len(sys.argv) == 1:
-            logger.addHandler(logging.FileHandler(r'C:\cades_sm.log'))
             servicemanager.Initialize()
             servicemanager.PrepareToHostSingle(CadesWinService)
             servicemanager.StartServiceCtrlDispatcher()
         else:
-            logger.addHandler(logging.FileHandler(r'C:\cades_wsu.log'))
             win32serviceutil.HandleCommandLine(CadesWinService)
     except CancelledError as e:
         logger.info("stop")
