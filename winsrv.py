@@ -8,6 +8,7 @@ import socket
 import win32event
 import os, time, sys
 
+
 from apisrv import ForkService, UvicornServer
 from logger import logger
 
@@ -77,6 +78,9 @@ def init():
     except KeyboardInterrupt as ki:
         logger.info("stop")
         exit(0)
+    except Exception as e:
+        logger.error(e, exc_info=e, stack_info=True)
+
 
 
 if __name__ == '__main__':
