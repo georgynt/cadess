@@ -1,4 +1,5 @@
 # import sys
+import logging
 from asyncio import CancelledError
 
 import servicemanager  # Simple setup and logging
@@ -65,10 +66,12 @@ def init():
 
     try:
         if len(sys.argv) == 1:
+            logger.addHandler(logging.FileHandler(r'C:\cades_sm.log'))
             servicemanager.Initialize()
             servicemanager.PrepareToHostSingle(CadesWinService)
             servicemanager.StartServiceCtrlDispatcher()
         else:
+            logger.addHandler(logging.FileHandler(r'C:\cadesa_wsu.log'))
             win32serviceutil.HandleCommandLine(CadesWinService)
     except CancelledError as e:
         logger.info("stop")
