@@ -14,24 +14,19 @@ from logger import logger
 
 
 class CadesWinService(win32serviceutil.ServiceFramework):
-    _svc_name_ = 'CadesService'
-    _svc_display_name_ = 'CadesService'
-    _svc_description_ = 'API Service for CAdES Subscription documents'
+    _svc_name_ = 'CasCAdES'
+    _svc_display_name_ = 'CasCAdES'
+    _svc_description_ = 'API Service for CAdES sign documents'
 
     def __init__(self, args):
         win32serviceutil.ServiceFramework.__init__(self, args)
         self.hWaitStop = win32event.CreateEvent(None, 0, 0, None)
         socket.setdefaulttimeout(120)
 
-    @property
-    def is_alive(self) -> bool:
-        if hasattr(self,'uvisrv'):
-            return self.uvisrv.is_alive()
-        return False
-
     def SvcStop(self):
         """Stop the service"""
         self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
+        win32event.SetEvent(self.hWaitStop)
         self.uvisrv.stop()
         self.ReportServiceStatus(win32service.SERVICE_STOPPED)
 
@@ -50,7 +45,11 @@ class CadesWinService(win32serviceutil.ServiceFramework):
     #         print(e)
     #         self.ReportServiceStatus(win32service.SERVICE_ERROR_CRITICAL)
     def SvcDoRun(self):
+        logger.debug('SvcDoRun')
         try:
+            servicemanager.LogMsg(servicemanager.EVENTLOG_INFORMATION_TYPE,
+                                  servicemanager.PYS_SERVICE_STARTED,
+                                  (self._svc_name_, ''))
             self.ReportServiceStatus(win32service.SERVICE_START_PENDING)
             self.uvisrv = UvicornServer()
             self.ReportServiceStatus(win32service.SERVICE_RUNNING)
@@ -70,7 +69,6 @@ def init():
             servicemanager.PrepareToHostSingle(CadesWinService)
             servicemanager.StartServiceCtrlDispatcher()
         else:
-        # if True:
             win32serviceutil.HandleCommandLine(CadesWinService)
     except CancelledError as e:
         logger.info("stop")
