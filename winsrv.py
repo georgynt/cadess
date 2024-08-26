@@ -16,7 +16,7 @@ from logger import formatter, logger
 
 def get_installation_dir():
     def fallback():
-        if getattr(sys, 'flozen', False):
+        if getattr(sys, 'frozen', False):
             return dirname(sys.executable)
         raise FileNotFoundError("Не найдена директория с установленной службой CasCAdES")
 
