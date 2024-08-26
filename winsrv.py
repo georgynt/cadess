@@ -1,6 +1,7 @@
 # import sys
 import logging
 from asyncio import CancelledError
+from os.path import dirname, join
 
 import servicemanager  # Simple setup and logging
 import win32service  # Events
@@ -11,6 +12,33 @@ import os, time, sys
 
 from apisrv import ForkService, UvicornServer
 from logger import formatter, logger
+
+
+def get_installation_dir():
+    def fallback():
+        SYSDISK_LETTER = dirname(os.environ['WINDIR'])
+        return join(SYSDISK_LETTER, 'cascades')
+
+    try: #Надо при инсталляции задать обязательно эту штуку в реестре
+        import winreg as wr
+        REG_PATH = r'SOFTWARE\CasCAdES'
+        INST_DIR = 'Installation'
+
+        try:
+            regkey = wr.OpenKey(wr.HKEY_LOCAL_MACHINE, REG_PATH)
+            (val, typ) = wr.QueryValueEx(regkey, INST_DIR)
+
+            return val
+        except FileNotFoundError:
+            return fallback()
+
+
+    except Exception as ex:
+        logger.error(ex)
+        return fallback()
+
+
+SERVICE_WORKDIR = get_installation_dir()
 
 
 def win_excepthook(excType, excValue, traceback, logger=logger):
@@ -75,6 +103,8 @@ def init():
     logger.addHandler(file_h)
     logger.debug(sys.argv)
     logger.debug(f"workdir = {os.getcwd()}")
+
+    os.chdir(SERVICE_WORKDIR)
 
     try:
         if len(sys.argv) == 1:
