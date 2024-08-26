@@ -9,9 +9,15 @@ import socket
 import win32event
 import os, time, sys
 
-
 from apisrv import ForkService, UvicornServer
 from logger import formatter, logger
+
+
+def win_excepthook(excType, excValue, traceback, logger=logger):
+    logger.error("Logging an uncaught exception",
+                 exc_info=(excType, excValue, traceback))
+
+sys.excepthook = win_excepthook
 
 
 class CadesWinService(win32serviceutil.ServiceFramework):
@@ -57,7 +63,7 @@ class CadesWinService(win32serviceutil.ServiceFramework):
             self.uvisrv.run()
             win32event.WaitForSingleObject(self.hWaitStop, win32event.INFINITE)
         except Exception as e:
-            logger.error(e)
+            logger.error(f"{e} (in SvcDoRun)")
             self.ReportServiceStatus(win32service.SERVICE_ERROR_CRITICAL)
 
 
