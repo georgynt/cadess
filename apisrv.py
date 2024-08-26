@@ -55,6 +55,7 @@ class UvicornServer(uvicorn.Server):
         self.uvconf = uvicorn.Config(self.app,
                                      host="0.0.0.0",
                                      port=SRV_PORT,
+                                     use_colors=False,
                                      ssl_keyfile=self.keyfile,
                                      ssl_certfile=self.certfile)
         info("UvicornServer created")
