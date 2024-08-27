@@ -101,12 +101,12 @@ class CadesWinService(win32serviceutil.ServiceFramework):
 def init():
     os.chdir(get_installation_dir())
 
-    file_h = logging.FileHandler(r'C:\cades.log')
-    file2_h = logging.FileHandler(r'cades.log')
+    # file_h = logging.FileHandler(r'C:\cades.log')
+    file_h = logging.FileHandler(r'cades.log')
+    # file_h.setFormatter(formatter)
     file_h.setFormatter(formatter)
-    file2_h.setFormatter(formatter)
+    # logger.addHandler(file_h)
     logger.addHandler(file_h)
-    logger.addHandler(file2_h)
 
     logger.debug(sys.argv)
     logger.debug(sys.path)

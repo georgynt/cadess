@@ -1,4 +1,5 @@
 from base64 import b64encode
+from time import sleep
 
 import pytz
 import random
@@ -36,15 +37,23 @@ if sys.platform == 'win32':
         def __init__(self):
             pythoncom.CoInitialize()
             self.store = win32.Dispatch(STORE)
-            self.store.Open(CAPICOM_SMART_CARD_USER_STORE,
-                       CAPICOM_MY_STORE,
-                       CAPICOM_STORE_OPEN_READ_ONLY)
-            if len(self.certs) > 0:
-                logger.info('Found RuToken store. Found certificates:')
-                for c in self.certs:
-                    logger.info(f"{c.SerialNumber}\n {c.SubjectName}")
+            for _ in range(10):
+                self.store.Open(CAPICOM_SMART_CARD_USER_STORE,
+                                CAPICOM_MY_STORE,
+                                CAPICOM_STORE_OPEN_READ_ONLY)
+                if len(self.certs) > 0:
+                    logger.info('Found RuToken store. Found certificates:')
+                    for c in self.certs:
+                        logger.info(f"{c.SerialNumber}\n {c.SubjectName}")
+                    break
+                else:
+                    logger.warning("a STORE not ready yet. Try after 10 seconds")
+                    sleep(10)
+                    self.store.Close()
             else:
                 logger.warning("NO CERTIFICATES FOUND!")
+
+
 
         @property
         def certs(self):

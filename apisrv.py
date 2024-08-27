@@ -1,11 +1,8 @@
 import asyncio
 import logging
 import multiprocessing
-import os
+import sys
 from asyncio import CancelledError
-from os.path import join
-
-from logger import info, logger
 from pathlib import Path
 
 import uvicorn
@@ -13,8 +10,10 @@ from fastapi import FastAPI
 
 from config import Config
 from const import SRV_PORT
+from logger import formatter, info, logger
 from middleware import middleware
 from router import CadesLogic, router
+
 
 KEYFILE_NAME = './certs/server.key'
 CERTFILE_NAME = './certs/server.crt'
@@ -83,7 +82,11 @@ class ForkService(multiprocessing.Process):
 
 
 if __name__ == '__main__':
-    logger.addHandler(logging.FileHandler(join(os.getcwd(), 'cades.log')))
+    stm_h = logging.StreamHandler(sys.stdout)
+    stm_h.setFormatter(formatter)
+    logger.addHandler(stm_h)
+
+    # logger.addHandler(logging.FileHandler(join(os.getcwd(), 'cades.log'))) наверное это не надо
     us = UvicornServer()
     try:
         us.run()
@@ -91,11 +94,3 @@ if __name__ == '__main__':
         logger.info("stop")
     except KeyboardInterrupt as e:
         logger.info("stop")
-
-    #try:
-    #    while us.is_alive():
-    #        us.join(10)
-    #except KeyboardInterrupt as e:
-    #    print('stop')
-    #    us.stop()
-    #    us.join()
