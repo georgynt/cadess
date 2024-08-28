@@ -1,3 +1,5 @@
+from base64 import b64decode
+
 import logger
 from datetime import date
 from decimal import Decimal
@@ -43,6 +45,7 @@ class DocumentRequest(BaseModel):
     number: str
     date: date
     amount: Decimal
+    data: str
 
 
 class SignedResponse(BaseModel):
@@ -98,8 +101,8 @@ async def sign(file: UploadFile = File(...)) -> SignedResponse:
     return SignedResponse(status=ServiceStatus.OK, msg='Document signed and sent to upstream')
 
 @router.post("/senddoc", tags=['send'])
-async def senddoc(item: DocumentRequest, file: UploadFile = File(...)) -> SignedResponse:
-    data = await file.read()
+async def senddoc(item: DocumentRequest) -> SignedResponse:
+    data = b64decode(item.data)
     config = Config()
     try:
         cades = CadesLogic()
