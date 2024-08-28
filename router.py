@@ -122,5 +122,5 @@ async def senddoc(item: DocumentRequest) -> SignedResponse:
 
     return SignedResponse(status=ServiceStatus.OK,
                           msg='Document signed and sent to upstream',
-                          uuid=doc.uuid)
+                          uuid=doc.guid)
 
