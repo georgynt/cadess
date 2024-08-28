@@ -1,3 +1,4 @@
+import logger
 from datetime import date
 from decimal import Decimal
 
@@ -107,9 +108,11 @@ async def senddoc(item: DocumentRequest) -> SignedResponse:
         signed_data = cades.sign_data(data, config.pincode, False)
 
         ss = Session()
-        d = Document(**dict(item), sign=sign)
+        d = Document(**dict(item),
+                     sign=sign)
         ss.add(d)
         ss.commit()
+        logger.info(f"Document {item.name} № {item.number} signed and sent to upstream")
 
     except Exception as e:
         raise HTTPException(422, str(e))

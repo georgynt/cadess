@@ -1,11 +1,14 @@
+from os.path import join
 from uuid import uuid4
 
 from sqlalchemy import BINARY, Column, DECIMAL, Date, String, Uuid
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.orm import declarative_base
 
+from tools import get_installation_dir
 
-DB_URL = "sqlite+aiosqlite:///./cades.db"
+
+DB_URL = f"sqlite+aiosqlite:///{join(get_installation_dir(), 'cades.db')}"
 
 engine = create_async_engine(DB_URL)
 # pool = create_async_pool_from_url(DB_URL)

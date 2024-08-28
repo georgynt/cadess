@@ -1,4 +1,5 @@
 import asyncio
+from datetime import date
 from hashlib import md5
 
 import requests as rq
@@ -9,6 +10,7 @@ from requests.auth import HTTPBasicAuth
 
 
 DOMAIN = 'https://cades-host/cades'
+DOMAIN = 'https://cades-win7/cades'
 DOMAIN = 'https://localhost:8000/cades'
 URL = f'{DOMAIN}/sign'
 
@@ -28,6 +30,20 @@ def test():
     ss.verify = False
     res = ss.get(f"{DOMAIN}/status")
     print(res)
+
+def send():
+    ss = rq.session()
+    ss.auth = HTTPCadesAuth('admin', 'admin123')
+    ss.verify = False
+    res = ss.post(f"{DOMAIN}/senddoc", json={
+        "name": "test.pdf",
+        "number": "123123",
+        "date": date.today().isoformat(),
+        "amount": 1000.1,
+        "data": "sdfnskjdfnskjdnfksajnfwenfoweinfsodjfsoaidjfoasijdfosijdfoasijdfoi323j4482434294ref"
+    })
+    res
+    res.content
 
 
 async def makerequest():
