@@ -1,9 +1,13 @@
+from datetime import date
+from decimal import Decimal
+
 from fastapi import File, HTTPException, UploadFile
 from fastapi.routing import APIRouter
 from pydantic import BaseModel
 
 from config import Config
 from const import ServiceStatus
+from db import Document, Session
 from logic import LogicMock, Logic
 
 
@@ -33,9 +37,12 @@ class Status(BaseModel):
     name: ServiceStatus
 
 
-class Document(BaseModel):
+class DocumentRequest(BaseModel):
+    name: str
+    number: str
+    date: date
+    amount: Decimal
     data: bytes
-    signature: bytes
 
 
 class SignedResponse(BaseModel):
@@ -85,6 +92,25 @@ async def sign(file: UploadFile = File(...)) -> SignedResponse:
         cades = CadesLogic()
         sign = cades.sign_data(data, config.pincode)
         signed_data = cades.sign_data(data, config.pincode, False)
+    except Exception as e:
+        raise HTTPException(422, str(e))
+
+    return SignedResponse(status=ServiceStatus.OK, msg='Document signed and sent to upstream')
+
+@router.post("/senddoc", tags=['send'])
+async def senddoc(item: DocumentRequest) -> SignedResponse:
+    data = item.data
+    config = Config()
+    try:
+        cades = CadesLogic()
+        sign = cades.sign_data(data, config.pincode)
+        signed_data = cades.sign_data(data, config.pincode, False)
+
+        ss = Session()
+        d = Document(**dict(item), sign=sign)
+        ss.add(d)
+        ss.commit()
+
     except Exception as e:
         raise HTTPException(422, str(e))
 

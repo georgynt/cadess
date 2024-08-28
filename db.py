@@ -1,7 +1,7 @@
 from uuid import uuid4
 
-from sqlalchemy import Boolean, Column, String, Uuid, exists, select
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine, create_async_pool_from_url
+from sqlalchemy import BINARY, Column, DECIMAL, Date, String, Uuid
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.orm import declarative_base
 
 
@@ -17,7 +17,12 @@ Base = declarative_base()
 class Document(Base):
     __tablename__ = 'documents'
     guid = Column(Uuid(), primary_key=True, default=uuid4)
-    name = Column(String(64))
+    name = Column(String(128))
+    number = Column(String(64))
+    amount = Column(DECIMAL(17, 5))
+    date = Column(Date())
+    data = Column(BINARY)
+    sign = Column(BINARY)
 
 
 async def create_tables():
