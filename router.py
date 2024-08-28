@@ -43,7 +43,6 @@ class DocumentRequest(BaseModel):
     number: str
     date: date
     amount: Decimal
-    data: bytes
 
 
 class SignedResponse(BaseModel):
@@ -99,8 +98,8 @@ async def sign(file: UploadFile = File(...)) -> SignedResponse:
     return SignedResponse(status=ServiceStatus.OK, msg='Document signed and sent to upstream')
 
 @router.post("/senddoc", tags=['send'])
-async def senddoc(item: DocumentRequest) -> SignedResponse:
-    data = item.data
+async def senddoc(item: DocumentRequest, file: UploadFile = File(...)) -> SignedResponse:
+    data = await file.read()
     config = Config()
     try:
         cades = CadesLogic()
