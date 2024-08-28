@@ -51,6 +51,7 @@ class DocumentRequest(BaseModel):
 class SignedResponse(BaseModel):
     status: ServiceStatus
     msg: str
+    uuid: str
 
 
 
@@ -110,14 +111,16 @@ async def senddoc(item: DocumentRequest) -> SignedResponse:
         signed_data = cades.sign_data(data, config.pincode, False)
 
         ss = Session()
-        d = Document(**dict(item),
+        doc = Document(**dict(item),
                      sign=sign)
-        ss.add(d)
+        ss.add(doc)
         ss.commit()
         logger.info(f"Document {item.name} № {item.number} signed and sent to upstream")
 
     except Exception as e:
         raise HTTPException(422, str(e))
 
-    return SignedResponse(status=ServiceStatus.OK, msg='Document signed and sent to upstream')
+    return SignedResponse(status=ServiceStatus.OK,
+                          msg='Document signed and sent to upstream',
+                          uuid=doc.uuid)
 
