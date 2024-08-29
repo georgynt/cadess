@@ -112,9 +112,11 @@ async def senddoc(item: DocumentRequest) -> SignedResponse:
 
         ss = Session()
         doc = Document(**dict(item),
-                     sign=sign)
+                       sign=sign)
         ss.add(doc)
-        ss.commit()
+        ss.flush()
+        ss.refresh(doc, ['guid'])
+
         logger.info(f"Document {item.name} № {item.number} signed and sent to upstream")
 
     except Exception as e:

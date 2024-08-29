@@ -10,6 +10,7 @@ from fastapi import FastAPI
 
 from config import Config
 from const import SRV_PORT
+from db import create_tables
 from logger import formatter, info, logger
 from middleware import middleware
 from router import CadesLogic, router
@@ -58,6 +59,7 @@ class UvicornServer(uvicorn.Server):
                                      ssl_keyfile=self.keyfile,
                                      ssl_certfile=self.certfile)
         info("UvicornServer created")
+        asyncio.run(create_tables())
         super().__init__(self.uvconf)
 
     def stop(self):
