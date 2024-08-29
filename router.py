@@ -1,4 +1,5 @@
 from base64 import b64decode
+from uuid import UUID
 
 import logger
 from datetime import date
@@ -51,7 +52,7 @@ class DocumentRequest(BaseModel):
 class SignedResponse(BaseModel):
     status: ServiceStatus
     msg: str
-    uuid: str
+    uuid: UUID
 
 
 
@@ -111,11 +112,11 @@ async def senddoc(item: DocumentRequest) -> SignedResponse:
         signed_data = cades.sign_data(data, config.pincode, False)
 
         ss = Session()
-        doc = Document(**dict(item),
-                       sign=sign)
+        doc = Document(**dict(item, data=data, sign=sign))
         ss.add(doc)
-        ss.flush()
-        ss.refresh(doc, ['guid'])
+        await ss.flush()
+        await ss.commit()
+        await ss.refresh(doc, ['guid'])
 
         logger.info(f"Document {item.name} № {item.number} signed and sent to upstream")
 
