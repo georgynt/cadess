@@ -95,8 +95,11 @@ if sys.platform == 'win32':
             signer.KeyPin = key_pin
             sd = win32.Dispatch(SIGNED_DATA)
             sd.Content = data
-            return sd.SignCades(signer, CADES_BES,
+            sign = sd.SignCades(signer, CADES_BES,
                                 detached_sign, CAPICOM_ENCODE_BASE64)
+            if isinstance(sign, str):
+                sign = sign.encode()
+            return sign
 
 
 class MockCert:
