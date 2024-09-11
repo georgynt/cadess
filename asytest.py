@@ -29,7 +29,9 @@ def test():
     ss.auth = HTTPCadesAuth('admin', 'admin123')
     ss.verify = False
     res = ss.get(f"{DOMAIN}/status")
+    res = ss.get(f"{DOMAIN}/diadoc")
     print(res)
+    res.content
 
 def send():
     ss = rq.session()

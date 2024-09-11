@@ -96,7 +96,8 @@ async def diadoc() -> Status:
     if dd.authenticate():
         return Status(code=1, name=DiadocServiceStatus.OK)
     else:
-        return Status(code=-1, name=DiadocServiceStatus.NOT_AVAILABLE)
+        # return Status(code=-1, name=DiadocServiceStatus.NOT_AVAILABLE)
+        raise HTTPException(404, "DIADOC service is not available")
 
 
 @router.post("/sign", tags=['sign'])
