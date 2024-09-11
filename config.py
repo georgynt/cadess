@@ -84,6 +84,10 @@ class Config(FileSystemEventHandler, metaclass=Singleton):
     def pincode(self) -> str:
         return self.settings.get('pincode', '')
 
+    @property
+    def client_id(self) -> str:
+        return self.settings.get('client-id', '')
+
 if __name__ == '__main__':
     try:
         while True:

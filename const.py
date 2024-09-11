@@ -1,5 +1,5 @@
 import sys
-from enum import Enum
+from enum import Enum, StrEnum
 
 
 if sys.platform == 'win32':
@@ -17,6 +17,11 @@ class ServiceStatus(str, Enum):
     NO_KEYS = 'no_keys'
     OK = 'OK'
 
+
+class DiadocServiceStatus(StrEnum):
+    NOT_AVAILABLE = 'not_available'
+    OK = 'OK'
+    # some others
 
 class AppCase(str, Enum):
     PY = 'py'

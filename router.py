@@ -10,8 +10,9 @@ from fastapi.routing import APIRouter
 from pydantic import BaseModel
 
 from config import Config
-from const import ServiceStatus
+from const import DiadocServiceStatus, ServiceStatus
 from db import Document, Session
+from diadoc.connector import AuthdDiadocAPI
 from logic import LogicMock, Logic
 
 
@@ -38,7 +39,7 @@ class Cert(BaseModel):
 
 class Status(BaseModel):
     code: int
-    name: ServiceStatus
+    name: ServiceStatus|DiadocServiceStatus
 
 
 class DocumentRequest(BaseModel):
@@ -87,6 +88,15 @@ async def set_default_key(number: str) -> str:
 @router.get("/status", tags=['status'])
 async def status() -> Status:
     return Status(code=1, name=ServiceStatus.OK)
+
+
+@router.get("/diadoc", tags=['diadoc'])
+async def diadoc() -> Status:
+    dd = AuthdDiadocAPI()
+    if dd.authenticate():
+        return Status(code=1, name=DiadocServiceStatus.OK)
+    else:
+        return Status(code=-1, name=DiadocServiceStatus.NOT_AVAILABLE)
 
 
 @router.post("/sign", tags=['sign'])
