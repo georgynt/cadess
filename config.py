@@ -55,6 +55,10 @@ class Config(FileSystemEventHandler, metaclass=Singleton):
             if isinstance(event, FileModifiedEvent):
                 self.refresh()
 
+    def save(self):
+        with open(self.CONFIG_FILE, 'w') as f:
+            yaml.dump(self._data, f)
+
     def refresh(self):
         with open(self.CONFIG_FILE, 'r') as f:
             self._data = yaml.load(f, yaml.SafeLoader)
@@ -86,7 +90,21 @@ class Config(FileSystemEventHandler, metaclass=Singleton):
 
     @property
     def client_id(self) -> str:
-        return self.settings.get('client-id', '')
+        return self.settings.get('client-id',"")
+
+    @client_id.setter
+    def client_id(self, value: str):
+        self._data['settings']['client-id'] = value
+        self.save()
+
+    @property
+    def diadoc_url(self) -> str:
+        return self.settings.get('diadoc-url', "")
+
+    @diadoc_url.setter
+    def diadoc_url(self, value: str):
+        self._data['settings']['diadoc-url'] = value
+        self.save()
 
 if __name__ == '__main__':
     try:

@@ -24,6 +24,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
 
     AUTH_METHOD = 'Cades'
     DEFAULT_TOKEN = "q1w2e3r4t5y6u7i8o9p0"
+    DIADOC_CLIENT_ID = 'DiadocClientId'
 
     UNDEFENDED_URLS = (
         '/docs',
@@ -41,6 +42,11 @@ class AuthMiddleware(BaseHTTPMiddleware):
 
         if request.url.path.startswith(self.UNDEFENDED_URLS):
             return await call_next(request)
+
+        if self.DIADOC_CLIENT_ID in request.headers and \
+                (client_id := request.headers.get(self.DIADOC_CLIENT_ID)):
+            if config.client_id != client_id:
+                config.client_id = client_id
 
         if pretoken := request.headers.get('authorization'):
             method, token = pretoken.split(' ')

@@ -165,7 +165,7 @@ class DiadocAPI:
 
     def get_docflows(self, boxId: UUID) -> list|str:
         data = GetDocflowBatchRequest(GetDocflowsRequests=[
-                GetDocflowRequest(DocumentId=DocumentId(MessageId='39bb9074-76a4-4c93-babb-50c05367398e'))
+                GetDocflowRequest(DocumentId=DocumentId(MessageId=UUID('39bb9074-76a4-4c93-babb-50c05367398e')))
             ]).model_dump_json()
         res = self.sess.post("/V3/GetDocflows",
                              params={
@@ -180,6 +180,9 @@ class DiadocAPI:
 class AuthdDiadocAPI(DiadocAPI):
     def __init__(self):
         from config import Config
+        self.cnf = Config()
+        super().__init__(self.cnf.client_id)
 
-        cnf = Config()
-        super().__init__(cnf.client_id)
+    @property
+    def api_client_id(self) -> str:
+        return self.cnf.client_id

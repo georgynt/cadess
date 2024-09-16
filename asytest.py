@@ -12,6 +12,7 @@ from requests.auth import HTTPBasicAuth
 DOMAIN = 'https://cades-host/cades'
 DOMAIN = 'https://cades-win7/cades'
 DOMAIN = 'https://localhost:8000/cades'
+DOMAIN = 'https://localhost:8080/cades'
 URL = f'{DOMAIN}/sign'
 
 
@@ -21,6 +22,8 @@ class HTTPCadesAuth(HTTPBasicAuth):
 
     def __call__(self, request):
         request.headers['Authorization'] = "Cades %s" % self.digest()
+        # request.headers['DiadocClientId'] = "priceplan-50855e2a-2640-4f6f-bae8-8ffff4722a4f"
+        request.headers['DiadocClientId'] = "sdfsdfsdfsdfsdf"
         return request
 
 
@@ -30,8 +33,14 @@ def test():
     ss.verify = False
     res = ss.get(f"{DOMAIN}/status")
     res = ss.get(f"{DOMAIN}/diadoc")
+    res = ss.get(f"{DOMAIN}/client-id")
+    res = ss.get(f"{DOMAIN}/diadoc-url")
+    res = ss.post(f"{DOMAIN}/client-id", json={'value': "test"})
+    res = ss.post(f"{DOMAIN}/diadoc-url", json={'url': "http://diadoc.service.ru"})
+
     print(res)
-    res.content
+    print(res.content)
+    print(res.json())
 
 def send():
     ss = rq.session()
