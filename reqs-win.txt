@@ -1,2 +1,3 @@
 -r reqs.txt
 pywin32
+pydantic_core==2.20.1
