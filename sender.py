@@ -2,7 +2,6 @@ import asyncio
 from asyncio import sleep
 from uuid import uuid4
 
-from fastapi_utils.tasks import repeat_every
 from requests import Response
 from sqlalchemy import select
 
@@ -79,23 +78,28 @@ def send_document(doc: Document) -> Document:
     return doc
 
 
-@repeat_every(seconds=60)
 async def handle_documents() -> None:
     """ Запускается в единственном экземпляре. Более одного инстанса одновременно не работает,
         что в общем-то и требуется
     """
-    try:
-        async with Session() as ss:
-            docs = await ss.execute(select(Document)
-                                    .where(Document.status.in_([DocumentStatus.RECEIVED, DocumentStatus.PROGRESS])
-                                           & (Document.tries < 5)).with_for_update(skip_locked=True))
-            for (doc,) in docs:
+    while True:
+        try:
+            async with Session() as ss:
+                docs = await ss.execute(select(Document)
+                                        .where(Document.status.in_([DocumentStatus.RECEIVED, DocumentStatus.PROGRESS])
+                                               & (Document.tries < 5)).with_for_update(skip_locked=True))
+                for (doc,) in docs:
 
-                doc = await asyncio.to_thread(send_document, doc)
-                ss.add(doc)
+                    doc = await asyncio.to_thread(send_document, doc)
+                    ss.add(doc)
 
-            await ss.commit()
+                await ss.commit()
 
-    except Exception as e:
-        logger.error(str(e))
+        except Exception as e:
+            logger.error(str(e))
 
+        await sleep(60)
+
+
+async def init_repeat_task() -> None:
+    asyncio.create_task(handle_documents())

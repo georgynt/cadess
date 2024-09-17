@@ -14,7 +14,7 @@ from db import create_tables
 from logger import formatter, info, logger
 from middleware import middleware
 from router import CadesLogic, router
-from sender import handle_documents
+from sender import handle_documents, init_repeat_task
 
 
 KEYFILE_NAME = './certs/server.key'
@@ -53,7 +53,7 @@ class UvicornServer(uvicorn.Server):
 
         self.app = FastAPI(middleware=middleware)
         self.app.include_router(router)
-        self.app.on_event("startup")(handle_documents)
+        self.app.on_event("startup")(init_repeat_task)
         self.uvconf = uvicorn.Config(self.app,
                                      host="0.0.0.0",
                                      port=SRV_PORT,
