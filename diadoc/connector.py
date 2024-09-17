@@ -65,10 +65,12 @@ class DiadocAPI:
         return (f"{AUTH_PREFIX} {client_id_param_name}={self.api_client_id}" +
                 (f",{ddauth_token_param_name}={self.api_token}" if self.api_token else ""))
 
-    def authenticate(self):
+    def authenticate(self, login: str, password: str) -> bool:
         res = self.sess.post("/V3/Authenticate",
-                             json={"login"   : "georgynt@mail.ru",
-                                   "password": "Z.HB6Qv7:Apg)'%"},
+                             # json={"login"   : login or "georgynt@mail.ru",
+                             #       "password": "Z.HB6Qv7:Apg)'%"},
+                             json={"login"   : login,
+                                   "password": password},
                              params={"type": "password"})
         if res.status_code in SUCCESS_CODES:
             self.api_token: str = res.content.decode()
@@ -186,3 +188,11 @@ class AuthdDiadocAPI(DiadocAPI):
     @property
     def api_client_id(self) -> str:
         return self.cnf.client_id
+
+    @api_client_id.setter
+    def api_client_id(self, value: str):
+        self.cnf.client_id = value
+
+    def authenticate(self) -> bool:
+        return super().authenticate(self.cnf.diadoc_login, self.cnf.diadoc_password)
+

@@ -106,6 +106,23 @@ class Config(FileSystemEventHandler, metaclass=Singleton):
         self._data['settings']['diadoc-url'] = value
         self.save()
 
+    @property
+    def diadoc_login(self):
+        return self._data['diadoc']['login']
+
+    @diadoc_login.setter
+    def diadoc_login(self, value: str):
+        self._data['diadoc']['login'] = value
+
+    @property
+    def diadoc_password(self):
+        return self._data['diadoc']['password']
+
+    @diadoc_password.setter
+    def diadoc_password(self, value: str):
+        self._data['diadoc']['password'] = value
+
+
 if __name__ == '__main__':
     try:
         while True:

@@ -20,3 +20,7 @@ class CounteragentStatus(StrEnum):
     RejectsMe = 'RejectsMe'
     IsRejectedByMe = 'IsRejectedByMe'
     NotInCounteragentList = 'NotInCounteragentList'
+
+
+class DiadocDocumentType(StrEnum):
+    ProformaInvoice = 'ProformaInvoice'

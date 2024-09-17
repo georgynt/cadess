@@ -11,7 +11,6 @@ LOG_LEVEL = "debug"
 WORKERS = 4
 
 
-
 class ServiceStatus(str, Enum):
     BUSY = 'busy'
     NO_KEYS = 'no_keys'
@@ -27,3 +26,12 @@ class AppCase(str, Enum):
     PY = 'py'
     EXE = 'exe'
     SRV = 'srv'
+
+
+class DocumentStatus(StrEnum):
+    PROGRESS = 'progress'
+    SENT = 'sent'
+    FAIL = 'fail'
+    NOT_FOUND = 'not-found'
+    RECEIVED = 'received'
+    UNKNOWN = 'unkwnown'

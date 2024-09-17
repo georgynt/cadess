@@ -1,4 +1,6 @@
+from abc import ABCMeta, abstractmethod, abstractproperty
 from base64 import b64encode
+from enum import property
 from time import sleep
 
 import pytz
@@ -32,8 +34,32 @@ SIGNER = "CAdESCOM.CPSigner"
 SIGNED_DATA = "CAdESCOM.CadesSignedData"
 
 
+class LogicAbstract(metaclass=ABCMeta):
+    @property
+    @abstractmethod
+    def certs(self):...
+
+    @property
+    @abstractmethod
+    def actual_certs(self):...
+
+    @property
+    @abstractmethod
+    def default_cert(self): ...
+
+    def find_cert(self, number_or_subject: str|None = None):
+        for cert in self.actual_certs:
+            if (number_or_subject is None or
+                        cert.SerialNumber == number_or_subject or
+                        number_or_subject in cert.SubjectName):
+                yield cert
+
+    @abstractmethod
+    def sign_data(self, data: bytes|str, key_pin: str, detached_sign: bool = True): ...
+
+
 if sys.platform == 'win32':
-    class Logic:
+    class Logic(LogicAbstract):
         def __init__(self):
             pythoncom.CoInitialize()
             self.store = win32.Dispatch(STORE)
@@ -52,8 +78,6 @@ if sys.platform == 'win32':
                     self.store.Close()
             else:
                 logger.warning("NO CERTIFICATES FOUND!")
-
-
 
         @property
         def certs(self):
@@ -81,13 +105,6 @@ if sys.platform == 'win32':
             else:
                 raise ValueError(f"{value} is not instance of str or COMObject")
 
-        def find_cert(self, number_or_subject: str|None = None):
-            for cert in self.actual_certs:
-                if (number_or_subject is None or
-                        cert.SerialNumber == number_or_subject or
-                        number_or_subject in cert.SubjectName):
-                    yield cert
-
         def sign_data(self, data: bytes|str, key_pin: str,
                       detached_sign: bool = True) -> bytes:
             signer = win32.Dispatch(SIGNER)
@@ -113,7 +130,7 @@ class MockCert:
         return CDispatch
 
 
-class LogicMock:
+class LogicMock(LogicAbstract):
     def __init__(self):
         self.store = None
         self.mock_cert = MockCert()
@@ -143,13 +160,6 @@ class LogicMock:
             self._def_cert = value
         else:
             raise ValueError(f"{value} is not instance of str or COMObject")
-
-    def find_cert(self, number_or_subject: str|None = None):
-        for cert in self.actual_certs:
-            if (number_or_subject is None or
-                    cert.SerialNumber == number_or_subject or
-                    number_or_subject in cert.SubjectName):
-                yield cert
 
     def sign_data(self, data: bytes|str, key_pin: str,
                   detached_sign: bool = True) -> bytes:

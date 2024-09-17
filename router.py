@@ -1,6 +1,8 @@
 from base64 import b64decode
 from uuid import UUID
 
+from sqlalchemy import select
+
 import logger
 from datetime import date
 from decimal import Decimal
@@ -10,7 +12,7 @@ from fastapi.routing import APIRouter
 from pydantic import BaseModel
 
 from config import Config
-from const import DiadocServiceStatus, ServiceStatus
+from const import DiadocServiceStatus, DocumentStatus, ServiceStatus
 from db import Document, Session
 from diadoc.connector import AuthdDiadocAPI
 from logic import LogicMock, Logic
@@ -43,6 +45,11 @@ class Status(BaseModel):
 
 
 class DocumentRequest(BaseModel):
+    source_box: UUID
+    dest_box: UUID | None = None
+    dest_inn: str | None = None
+    dest_kpp: str | None = None
+
     name: str
     number: str
     date: date
@@ -53,8 +60,13 @@ class DocumentRequest(BaseModel):
 class SignedResponse(BaseModel):
     status: ServiceStatus
     msg: str
-    uuid: UUID
+    uuid: UUID | None = None
 
+
+class DocStatusResponse(BaseModel):
+    status: DocumentStatus
+    guid: UUID
+    msg: str
 
 
 @router.get("/keys", tags=['keys'])
@@ -126,21 +138,41 @@ async def diadoc_url(data: dict[str, str]) -> str:
     return "OK"
 
 
+@router.get("/documents/{guid}/status", tags=['status'])
+async def document_status(guid: UUID) -> DocStatusResponse:
+    ss = Session()
+    if doc := (await ss.execute(select(Document).where(Document.guid==guid))).scalar():
+        match doc.status:
+            case DocumentStatus.PROGRESS:
+                msg = 'Документ находится в процессе отправки в ДИАДОК'
+            case DocumentStatus.FAIL:
+                msg = "Ошибка отправки документа"
+            case DocumentStatus.SENT:
+                msg = "Документ отправлен в ДИАДОК"
+            case DocumentStatus.RECEIVED:
+                msg = "Документ получен и скоро перейдёт в обработку"
+            case _:
+                return DocStatusResponse(status=DocumentStatus.UNKNOWN, msg="Документ в неизвестном статусе")
+        return DocStatusResponse(status=doc.status, guid=doc.guid, msg=msg)
+    else:
+        return DocStatusResponse(status=DocumentStatus.NOT_FOUND, guid=doc.guid,
+                                 msg='Документ не найден. Возможно он был отправлен в ДИАДОК')
 
 
+# @router.post("/sign", tags=['sign'])
+# async def sign(file: UploadFile = File(...)) -> SignedResponse:
+#     # Этот метод пока что не нужен, мы не отдаём ЭЦП клиенту, мы просто отправляем подписанный док. в ДИАДОК
+#     data = await file.read()
+#     config = Config()
+#     try:
+#         cades = CadesLogic()
+#         sign = cades.sign_data(data, config.pincode)
+#         signed_data = cades.sign_data(data, config.pincode, False)
+#     except Exception as e:
+#         raise HTTPException(422, str(e))
+#
+#     return SignedResponse(status=ServiceStatus.OK, msg='Document signed and sent to upstream')
 
-@router.post("/sign", tags=['sign'])
-async def sign(file: UploadFile = File(...)) -> SignedResponse:
-    data = await file.read()
-    config = Config()
-    try:
-        cades = CadesLogic()
-        sign = cades.sign_data(data, config.pincode)
-        signed_data = cades.sign_data(data, config.pincode, False)
-    except Exception as e:
-        raise HTTPException(422, str(e))
-
-    return SignedResponse(status=ServiceStatus.OK, msg='Document signed and sent to upstream')
 
 @router.post("/senddoc", tags=['send'])
 async def senddoc(item: DocumentRequest) -> SignedResponse:
@@ -152,7 +184,11 @@ async def senddoc(item: DocumentRequest) -> SignedResponse:
         signed_data = cades.sign_data(data, config.pincode, False)
 
         ss = Session()
-        doc = Document(**dict(item, data=data, sign=sign))
+        doc = Document(**dict(item,
+                              data=data,
+                              sign=sign,
+                              signed_data=signed_data,
+                              status=DocumentStatus.RECEIVED))
         ss.add(doc)
         await ss.flush()
         await ss.commit()

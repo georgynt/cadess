@@ -37,6 +37,7 @@ def test():
     res = ss.get(f"{DOMAIN}/diadoc-url")
     res = ss.post(f"{DOMAIN}/client-id", json={'value': "test"})
     res = ss.post(f"{DOMAIN}/diadoc-url", json={'url': "http://diadoc.service.ru"})
+    res = ss.get(f"{DOMAIN}/documents/cd1e1d84-3c79-4dd1-9300-f153f5c1832b/status")
 
     print(res)
     print(res.content)
