@@ -95,9 +95,6 @@ def send_document(doc: Document) -> Document:
 
 
 async def handle_documents() -> None:
-    """ Запускается в единственном экземпляре. Более одного инстанса одновременно не работает,
-        что в общем-то и требуется
-    """
     while True:
         try:
             async with Session() as ss:

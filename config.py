@@ -22,7 +22,8 @@ default_config_object = {
     'settings': {
         'certnumber': '',
         'pincode': '',
-        'fake-logic': True
+        'fake-logic': True,
+        'certificate-store': 4
     },
     "diadoc": {
         "client-id": None,
@@ -35,6 +36,8 @@ default_config_object = {
 
 class Config(FileSystemEventHandler, metaclass=Singleton):
     CONFIG_FILE = 'cades.yaml'
+    _data: dict[str, dict[str, str|int|bool]|list[str]]
+
     def __init__(self):
         if not os.path.exists(self.CONFIG_FILE):
             with open(self.CONFIG_FILE, 'w') as f:
@@ -113,7 +116,7 @@ class Config(FileSystemEventHandler, metaclass=Singleton):
         self.save()
 
     @property
-    def diadoc_login(self):
+    def diadoc_login(self) -> str:
         return self._data['diadoc']['login']
 
     @diadoc_login.setter
@@ -122,7 +125,7 @@ class Config(FileSystemEventHandler, metaclass=Singleton):
         self.save()
 
     @property
-    def diadoc_password(self):
+    def diadoc_password(self) -> str:
         return self._data['diadoc']['password']
 
     @diadoc_password.setter
@@ -130,6 +133,9 @@ class Config(FileSystemEventHandler, metaclass=Singleton):
         self._data['diadoc']['password'] = value
         self.save()
 
+    @property
+    def capicom_store(self) -> int:
+        return self._data.get('settings', {}).get('certificate-store', 1)
 
 if __name__ == '__main__':
     try:

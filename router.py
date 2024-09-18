@@ -50,11 +50,13 @@ class DocumentRequest(BaseModel):
     dest_inn: str | None = None
     dest_kpp: str | None = None
 
+    uuid: UUID
     name: str
     number: str
     date: date
     amount: Decimal
     data: str
+
     login: str
     password: str
 
@@ -67,7 +69,7 @@ class SignedResponse(BaseModel):
 
 class DocStatusResponse(BaseModel):
     status: DocumentStatus
-    guid: UUID
+    uuid: UUID
     msg: str
 
 
@@ -142,23 +144,23 @@ async def diadoc_url(data: dict[str, str]) -> str:
 
 @router.get("/documents/{guid}/status", tags=['status'])
 async def document_status(guid: UUID) -> DocStatusResponse:
-    ss = Session()
-    if doc := (await ss.execute(select(Document).where(Document.guid==guid))).scalar():
-        match doc.status:
-            case DocumentStatus.PROGRESS:
-                msg = 'Документ находится в процессе отправки в ДИАДОК'
-            case DocumentStatus.FAIL:
-                msg = "Ошибка отправки документа"
-            case DocumentStatus.SENT:
-                msg = "Документ отправлен в ДИАДОК"
-            case DocumentStatus.RECEIVED:
-                msg = "Документ получен и скоро перейдёт в обработку"
-            case _:
-                return DocStatusResponse(status=DocumentStatus.UNKNOWN, msg="Документ в неизвестном статусе")
-        return DocStatusResponse(status=doc.status, guid=doc.guid, msg=msg)
-    else:
-        return DocStatusResponse(status=DocumentStatus.NOT_FOUND, guid=doc.guid,
-                                 msg='Документ не найден. Возможно он был отправлен в ДИАДОК')
+    async with Session() as ss:
+        if doc := (await ss.execute(select(Document).where(Document.uuid == guid))).scalar():
+            match doc.status:
+                case DocumentStatus.PROGRESS:
+                    msg = 'Документ находится в процессе отправки в ДИАДОК'
+                case DocumentStatus.FAIL:
+                    msg = "Ошибка отправки документа"
+                case DocumentStatus.SENT:
+                    msg = "Документ отправлен в ДИАДОК"
+                case DocumentStatus.RECEIVED:
+                    msg = "Документ получен и скоро перейдёт в обработку"
+                case _:
+                    return DocStatusResponse(status=DocumentStatus.UNKNOWN, msg="Документ в неизвестном статусе")
+            return DocStatusResponse(status=doc.status, uuid=doc.uuid, msg=msg)
+        else:
+            return DocStatusResponse(status=DocumentStatus.NOT_FOUND, uuid=doc.uuid,
+                                     msg='Документ не найден. Возможно он был отправлен в ДИАДОК')
 
 
 # @router.post("/sign", tags=['sign'])
@@ -185,16 +187,16 @@ async def senddoc(item: DocumentRequest) -> SignedResponse:
         sign = cades.sign_data(data, config.pincode)
         signed_data = cades.sign_data(data, config.pincode, False)
 
-        ss = Session()
-        doc = Document(**dict(item,
-                              data=data,
-                              sign=sign,
-                              signed_data=signed_data,
-                              status=DocumentStatus.RECEIVED))
-        ss.add(doc)
-        await ss.flush()
-        await ss.commit()
-        await ss.refresh(doc, ['guid'])
+        async with Session() as ss:
+            doc = Document(**dict(item,
+                                  data=data,
+                                  sign=sign,
+                                  signed_data=signed_data,
+                                  status=DocumentStatus.RECEIVED))
+            ss.add(doc)
+            await ss.flush()
+            await ss.commit()
+            await ss.refresh(doc, ['uuid'])
 
         logger.info(f"Document {item.name} № {item.number} signed and sent to upstream")
 
@@ -203,5 +205,5 @@ async def senddoc(item: DocumentRequest) -> SignedResponse:
 
     return SignedResponse(status=ServiceStatus.OK,
                           msg='Document signed and sent to upstream',
-                          uuid=doc.guid)
+                          uuid=doc.uuid)
 

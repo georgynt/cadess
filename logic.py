@@ -8,6 +8,8 @@ import random
 import sys
 from datetime import datetime, timedelta
 from logging import info, warning, error
+
+from config import Config
 from logger import logger
 
 if sys.platform == 'win32':
@@ -61,12 +63,15 @@ class LogicAbstract(metaclass=ABCMeta):
 if sys.platform == 'win32':
     class Logic(LogicAbstract):
         def __init__(self):
+            self.conf = Config()
             pythoncom.CoInitialize()
             self.store = win32.Dispatch(STORE)
             for _ in range(10):
-                self.store.Open(CAPICOM_SMART_CARD_USER_STORE,
+                capicom_store = self.conf.capicom_store or CAPICOM_SMART_CARD_USER_STORE
+                self.store.Open(capicom_store,
                                 CAPICOM_MY_STORE,
                                 CAPICOM_STORE_OPEN_READ_ONLY)
+
                 if len(self.certs) > 0:
                     logger.info('Found RuToken store. Found certificates:')
                     for c in self.certs:

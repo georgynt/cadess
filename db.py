@@ -21,7 +21,7 @@ Base = declarative_base()
 
 class Document(Base):
     __tablename__ = 'documents'
-    guid = Column(Uuid(), primary_key=True, default=uuid4)
+    uuid = Column(Uuid(), primary_key=True, default=uuid4)
     message_id = Column(Uuid(), nullable=True)
 
     source_box = Column(Uuid(), nullable=False)
@@ -49,10 +49,10 @@ class Document(Base):
         return self.date.isoformat()
 
     def __str__(self):
-        return f"doc:id={self.guid},name={self.name},status={self.status}"
+        return f"doc:id={self.uuid},name={self.name},status={self.status}"
 
     def __repr__(self):
-        return f"<Document guid={self.guid} name={self.name} number={self.number} status={self.status}>"
+        return f"<Document uuid={self.uuid} name={self.name} number={self.number} status={self.status}>"
 
 
 async def create_tables():
