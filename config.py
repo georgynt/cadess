@@ -1,3 +1,4 @@
+#from asyncio import Lock
 from time import sleep
 
 import yaml, sys, os
@@ -39,6 +40,7 @@ class Config(FileSystemEventHandler, metaclass=Singleton):
     _data: dict[str, dict[str, str|int|bool]|list[str]]
 
     def __init__(self):
+#        self._lock = Lock()
         if not os.path.exists(self.CONFIG_FILE):
             with open(self.CONFIG_FILE, 'w') as f:
                 yaml.dump(default_config_object, f)
@@ -65,6 +67,7 @@ class Config(FileSystemEventHandler, metaclass=Singleton):
                 self.refresh()
 
     def save(self):
+        # async with self._lock:
         with open(self.CONFIG_FILE, 'w') as f:
             yaml.dump(self._data, f)
 
@@ -103,6 +106,7 @@ class Config(FileSystemEventHandler, metaclass=Singleton):
 
     @client_id.setter
     def client_id(self, value: str):
+        # with self._lock:
         self._data['diadoc']['client-id'] = value
         self.save()
 
@@ -112,6 +116,7 @@ class Config(FileSystemEventHandler, metaclass=Singleton):
 
     @diadoc_url.setter
     def diadoc_url(self, value: str):
+        # with self._lock:
         self._data['diadoc']['url'] = value
         self.save()
 
@@ -121,6 +126,7 @@ class Config(FileSystemEventHandler, metaclass=Singleton):
 
     @diadoc_login.setter
     def diadoc_login(self, value: str):
+        # with self._lock:
         self._data['diadoc']['login'] = value
         self.save()
 
