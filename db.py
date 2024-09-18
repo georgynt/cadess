@@ -41,6 +41,8 @@ class Document(Base):
     status = Column(Enum(DocumentStatus), default=DocumentStatus.RECEIVED, nullable=False)
     tries = Column(INT, default=0, nullable=False)
     error_msg = Column(String(512), nullable=True)
+    login = Column(String(128), nullable=True)
+    password = Column(String(128), nullable=True)
 
     @property
     def date_as_str(self):

@@ -31,6 +31,7 @@ class AppCase(str, Enum):
 class DocumentStatus(StrEnum):
     PROGRESS = 'progress'
     SENT = 'sent'
+    FAKELY_SENT = 'fake_sent'
     FAIL = 'fail'
     NOT_FOUND = 'not-found'
     RECEIVED = 'received'

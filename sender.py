@@ -6,18 +6,34 @@ from requests import Response
 from sqlalchemy import select
 
 import logger
+from config import Config
 from const import DocumentStatus
 from db import Document, Session
-from diadoc.connector import AuthdDiadocAPI
+from diadoc.connector import AuthdDiadocAPI, ConfiguredDiadocAPI
 from diadoc.enums import DiadocDocumentType
 from diadoc.struct import Counteragent, DocumentAttachment, Message, MessageToPost, MetadataItem, SignedContent
 
 
 def send_document(doc: Document) -> Document:
-    dda = AuthdDiadocAPI()
-    dda.authenticate()
+    conf = Config()
 
-    doc.status = DocumentStatus.PROGRESS
+    if conf.fake_logic:
+        doc.status = DocumentStatus.FAKELY_SENT
+        doc.error_msg = "The document was sent fakely"
+        return doc
+
+    if doc.login and doc.password:
+        dda = ConfiguredDiadocAPI()
+    else:
+        dda = AuthdDiadocAPI()
+
+    try:
+        dda.authenticate(doc.login, doc.password)
+        doc.status = DocumentStatus.PROGRESS
+    except Exception as e:
+        doc.status = DocumentStatus.FAIL
+        doc.tries += 1
+        return doc
 
     sbox = doc.source_box
     if not (dbox := doc.dest_box):

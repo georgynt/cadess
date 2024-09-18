@@ -38,8 +38,8 @@ class DiadocSession(Session):
 
 class DiadocAPI:
 
-    def __init__(self, api_client_id=None):
-        self.url = 'https://diadoc-api.kontur.ru'
+    def __init__(self, url=None, api_client_id=None):
+        self.url = url or 'https://diadoc-api.kontur.ru'
         self.sess = DiadocSession(self.url)
         self.api_client_id = api_client_id
         self.sess.headers[AUTH] = self.header
@@ -179,11 +179,11 @@ class DiadocAPI:
         return res.content.decode()
 
 
-class AuthdDiadocAPI(DiadocAPI):
+class ConfiguredDiadocAPI(DiadocAPI):
     def __init__(self):
         from config import Config
         self.cnf = Config()
-        super().__init__(self.cnf.client_id)
+        super().__init__(self.cnf.diadoc_url, self.cnf.client_id)
 
     @property
     def api_client_id(self) -> str:
@@ -193,6 +193,11 @@ class AuthdDiadocAPI(DiadocAPI):
     def api_client_id(self, value: str):
         self.cnf.client_id = value
 
-    def authenticate(self) -> bool:
-        return super().authenticate(self.cnf.diadoc_login, self.cnf.diadoc_password)
 
+class AuthdDiadocAPI(ConfiguredDiadocAPI):
+    def __init__(self):
+        super().__init__()
+        super().authenticate(self.cnf.diadoc_login, self.cnf.diadoc_password) # ИМЕННО от SUPER!
+
+    def authenticate(self, *args, **kwargs) -> bool:
+        return True

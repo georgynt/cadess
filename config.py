@@ -23,6 +23,12 @@ default_config_object = {
         'certnumber': '',
         'pincode': '',
         'fake-logic': True
+    },
+    "diadoc": {
+        "client-id": None,
+        "url": None,
+        "login": None,
+        "password": None
     }
 }
 
@@ -90,20 +96,20 @@ class Config(FileSystemEventHandler, metaclass=Singleton):
 
     @property
     def client_id(self) -> str:
-        return self.settings.get('client-id',"")
+        return self._data.get('diadoc', {}).get('client-id',"")
 
     @client_id.setter
     def client_id(self, value: str):
-        self._data['settings']['client-id'] = value
+        self._data['diadoc']['client-id'] = value
         self.save()
 
     @property
     def diadoc_url(self) -> str:
-        return self.settings.get('diadoc-url', "")
+        return self._data.get("diadoc",{}).get('url', "")
 
     @diadoc_url.setter
     def diadoc_url(self, value: str):
-        self._data['settings']['diadoc-url'] = value
+        self._data['diadoc']['url'] = value
         self.save()
 
     @property
@@ -113,6 +119,7 @@ class Config(FileSystemEventHandler, metaclass=Singleton):
     @diadoc_login.setter
     def diadoc_login(self, value: str):
         self._data['diadoc']['login'] = value
+        self.save()
 
     @property
     def diadoc_password(self):
@@ -121,6 +128,7 @@ class Config(FileSystemEventHandler, metaclass=Singleton):
     @diadoc_password.setter
     def diadoc_password(self, value: str):
         self._data['diadoc']['password'] = value
+        self.save()
 
 
 if __name__ == '__main__':

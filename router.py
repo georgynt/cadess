@@ -55,6 +55,8 @@ class DocumentRequest(BaseModel):
     date: date
     amount: Decimal
     data: str
+    login: str
+    password: str
 
 
 class SignedResponse(BaseModel):
