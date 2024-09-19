@@ -68,12 +68,14 @@ class Config(FileSystemEventHandler, metaclass=Singleton):
 
     def save(self):
         # async with self._lock:
-        with open(self.CONFIG_FILE, 'w') as f:
-            yaml.dump(self._data, f)
+        if self._data:
+            with open(self.CONFIG_FILE, 'w') as f:
+                yaml.dump(self._data, f)
 
     def refresh(self):
         with open(self.CONFIG_FILE, 'r') as f:
-            self._data = yaml.load(f, yaml.SafeLoader)
+            if data := yaml.load(f, yaml.SafeLoader):
+                self._data = data
             logger.debug(self._data)
 
     @property
