@@ -68,9 +68,13 @@ if sys.platform == 'win32':
             self.store = win32.Dispatch(STORE)
             for _ in range(10):
                 capicom_store = self.conf.capicom_store or CAPICOM_SMART_CARD_USER_STORE
-                self.store.Open(capicom_store,
-                                CAPICOM_MY_STORE,
-                                CAPICOM_STORE_OPEN_READ_ONLY)
+                match capicom_store:
+                    case 4:
+                        self.store.Open(capicom_store,
+                                        CAPICOM_MY_STORE,
+                                        CAPICOM_STORE_OPEN_READ_ONLY)
+                    case capicom_store if capicom_store in [2,1]:
+                        self.store.Open(capicom_store)
 
                 if len(self.certs) > 0:
                     logger.info('Found RuToken store. Found certificates:')
