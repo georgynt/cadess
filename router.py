@@ -194,7 +194,7 @@ async def senddoc(item: DocumentRequest) -> SignedResponse:
                                   signed_data=signed_data,
                                   status=DocumentStatus.RECEIVED))
             ss.add(doc)
-            await ss.flush()
+            # await ss.flush()
             await ss.commit()
             await ss.refresh(doc, ['uuid'])
 
