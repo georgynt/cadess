@@ -48,7 +48,9 @@ def send_document(doc: Document) -> Document:
     if isinstance(ctg := dda.get_ctg(sbox, dbox), Counteragent):
         try:
             sc = SignedContent(Content=doc.signed_data,
-                               Signature=doc.sign)
+                               Signature=doc.sign,
+                               SignWithTestSignature=conf.test_sign)
+            
             if not doc.message_id:
                 doc.message_id = uuid4()
 
@@ -101,7 +103,7 @@ async def handle_documents() -> None:
                 docs = await ss.execute(select(Document)
                                         .where(Document.status.in_([DocumentStatus.RECEIVED, DocumentStatus.PROGRESS])
                                                & (Document.tries < 5)).with_for_update(skip_locked=True))
-                for (doc,) in docs:
+                for doc in docs.scalars():
 
                     doc = await asyncio.to_thread(send_document, doc)
                     ss.add(doc)

@@ -156,10 +156,10 @@ async def document_status(guid: UUID) -> DocStatusResponse:
                 case DocumentStatus.RECEIVED:
                     msg = "Документ получен и скоро перейдёт в обработку"
                 case _:
-                    return DocStatusResponse(status=DocumentStatus.UNKNOWN, msg="Документ в неизвестном статусе")
+                    return DocStatusResponse(status=DocumentStatus.UNKNOWN, uuid=guid, msg="Документ в неизвестном статусе")
             return DocStatusResponse(status=doc.status, uuid=doc.uuid, msg=msg)
         else:
-            return DocStatusResponse(status=DocumentStatus.NOT_FOUND, uuid=doc.uuid,
+            return DocStatusResponse(status=DocumentStatus.NOT_FOUND, uuid=guid,
                                      msg='Документ не найден. Возможно он был отправлен в ДИАДОК')
 
 

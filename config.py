@@ -145,6 +145,11 @@ class Config(FileSystemEventHandler, metaclass=Singleton):
     def capicom_store(self) -> int:
         return self._data.get('settings', {}).get('certificate-store', 1)
 
+    @property
+    def test_sign(self) -> bool:
+        return self._data.get('settings', {}).get('test-sign', False)
+
+
 if __name__ == '__main__':
     try:
         while True:

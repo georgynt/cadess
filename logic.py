@@ -114,11 +114,14 @@ if sys.platform == 'win32':
             else:
                 raise ValueError(f"{value} is not instance of str or COMObject")
 
-        def sign_data(self, data: bytes|str, key_pin: str,
+        def sign_data(self,
+                      data: bytes|str,
+                      key_pin: str|None = None,
                       detached_sign: bool = True) -> bytes:
             signer = win32.Dispatch(SIGNER)
             signer.Certificate = self.default_cert
-            signer.KeyPin = key_pin
+            if key_pin:
+                signer.KeyPin = key_pin
             sd = win32.Dispatch(SIGNED_DATA)
             sd.Content = data
             sign = sd.SignCades(signer, CADES_BES,
