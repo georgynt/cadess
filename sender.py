@@ -50,7 +50,7 @@ def send_document(doc: Document) -> Document:
             sc = SignedContent(Content=doc.signed_data,
                                Signature=doc.sign,
                                SignWithTestSignature=conf.test_sign)
-            
+
             if not doc.message_id:
                 doc.message_id = uuid4()
 
