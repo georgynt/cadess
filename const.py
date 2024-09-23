@@ -36,3 +36,13 @@ class DocumentStatus(StrEnum):
     NOT_FOUND = 'not-found'
     RECEIVED = 'received'
     UNKNOWN = 'unkwnown'
+
+
+class DocumentStatusRus(StrEnum):
+    PROGRESS = 'В обработке'
+    SENT = "Отправлено"
+    FAKELY_SENT = "Фейк. отправлено"
+    FAIL = "Неудача"
+    NOT_FOUND = "Не найден"
+    RECEIVED = "Получен"
+    UNKNOWN = "Неизвестно"

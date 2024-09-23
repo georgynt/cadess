@@ -12,7 +12,7 @@ from fastapi.routing import APIRouter
 from pydantic import BaseModel
 
 from config import Config
-from const import DiadocServiceStatus, DocumentStatus, ServiceStatus
+from const import DiadocServiceStatus, DocumentStatus, DocumentStatusRus, ServiceStatus
 from db import Document, Session
 from diadoc.connector import AuthdDiadocAPI
 from logic import LogicMock, Logic
@@ -75,6 +75,11 @@ class DocStatusResponse(BaseModel):
 
 class DocsStatusRequest(BaseModel):
     uuids: list[UUID]
+
+
+class DocumentStatusRef(BaseModel):
+    status: DocumentStatus
+    descr: str
 
 
 @router.get("/keys", tags=['keys'])
@@ -170,6 +175,7 @@ async def document_status(guid: UUID) -> DocStatusResponse:
             return DocStatusResponse(status=DocumentStatus.NOT_FOUND, uuid=guid,
                                      msg='Документ не найден. Возможно он был отправлен в ДИАДОК')
 
+
 @router.post("/documents/status", tags=['status'])
 async def document_status(request: DocsStatusRequest) -> list[DocStatusResponse]:
     async with Session() as ss:
@@ -181,19 +187,14 @@ async def document_status(request: DocsStatusRequest) -> list[DocStatusResponse]
             ]
 
 
-# @router.post("/sign", tags=['sign'])
-# async def sign(file: UploadFile = File(...)) -> SignedResponse:
-#     # Этот метод пока что не нужен, мы не отдаём ЭЦП клиенту, мы просто отправляем подписанный док. в ДИАДОК
-#     data = await file.read()
-#     config = Config()
-#     try:
-#         cades = CadesLogic()
-#         sign = cades.sign_data(data, config.pincode)
-#         signed_data = cades.sign_data(data, config.pincode, False)
-#     except Exception as e:
-#         raise HTTPException(422, str(e))
-#
-#     return SignedResponse(status=ServiceStatus.OK, msg='Document signed and sent to upstream')
+@router.get("/status-ref", tags=['status'])
+async def status_ref() -> list[DocumentStatusRef]:
+    return [
+        DocumentStatusRef(status=stt,
+                          descr=DocumentStatusRus[stt.name])
+            for stt in DocumentStatus
+    ]
+
 
 
 @router.post("/senddoc", tags=['send'])
