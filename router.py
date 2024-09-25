@@ -178,7 +178,7 @@ async def document_status(guid: UUID) -> DocStatusResponse:
             if doc := (await ss.execute(select(Document).where(Document.uuid == guid))).scalar():
                 dd = ConfiguredDiadocAPI()
                 dd.authenticate(doc.login, doc.password)
-                stt = dd.get_document_status(doc.source_box, doc.message_id, doc.uuid)
+                stt = dd.get_document_status(doc.source_box, doc.message_id, doc.entity_id)
                 msg = get_msg(doc.status)
                 return DocStatusResponse(status=doc.status, edo_status=stt.Severity,
                                          edo_status_descr=stt.StatusText, uuid=doc.uuid, msg=msg)
@@ -190,7 +190,7 @@ async def document_status(guid: UUID) -> DocStatusResponse:
 
 
 async def gen_doc_status_response(dd: DiadocAPI, doc: Document, login: str, passwd: str) -> DocStatusResponse:
-    doc_stt = await dd.aget_document_status(doc.source_box, doc.message_id, doc.uuid)
+    doc_stt = await dd.aget_document_status(doc.source_box, doc.message_id, doc.entity_id)
     return DocStatusResponse(status=doc.status,
                              edo_status=doc_stt.Severity,
                              edo_status_descr=doc_stt.StatusText,
@@ -217,6 +217,7 @@ async def document_status(request: DocsStatusRequest) -> list[DocStatusResponse]
                 #                       msg=get_msg(doc.status)) for doc in docs
                 # ]
     except Exception as e:
+        logger.error(str(e))
         raise HTTPException(500, str(e))
 
 
