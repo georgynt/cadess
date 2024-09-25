@@ -165,14 +165,12 @@ class DiadocAPI:
             return res.json()
         return res.content.decode()
 
-    def get_docflows(self, boxId: UUID) -> list|str:
+    def get_docflows(self, boxId: UUID, message_id: UUID, document_id: UUID) -> list|str:
         data = GetDocflowBatchRequest(GetDocflowsRequests=[
-                GetDocflowRequest(DocumentId=DocumentId(MessageId=UUID('39bb9074-76a4-4c93-babb-50c05367398e')))
+                GetDocflowRequest(DocumentId=DocumentId(MessageId=message_id, EntityId=document_id))
             ]).model_dump_json()
         res = self.sess.post("/V3/GetDocflows",
-                             params={
-                                 "boxId": str(boxId)
-                             },
+                             params={"boxId": str(boxId)},
                              data=data)
         if self.is_last_ok():
             return res.json()['Documents']

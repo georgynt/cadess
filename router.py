@@ -69,6 +69,7 @@ class SignedResponse(BaseModel):
 
 class DocStatusResponse(BaseModel):
     status: DocumentStatus
+    edo_status: str|None
     uuid: UUID
     msg: str
 
@@ -196,7 +197,6 @@ async def status_ref() -> list[DocumentStatusRef]:
     ]
 
 
-
 @router.post("/senddoc", tags=['send'])
 async def senddoc(item: DocumentRequest) -> SignedResponse:
     data = b64decode(item.data)
@@ -207,17 +207,27 @@ async def senddoc(item: DocumentRequest) -> SignedResponse:
         signed_data = cades.sign_data(data, config.pincode, False)
 
         async with Session() as ss:
-            doc = Document(**dict(item,
-                                  data=data,
-                                  sign=sign,
-                                  signed_data=signed_data,
-                                  status=DocumentStatus.RECEIVED))
-            ss.add(doc)
-            # await ss.flush()
-            await ss.commit()
-            await ss.refresh(doc, ['uuid'])
 
-        logger.info(f"Document {item.name} № {item.number} signed and sent to upstream")
+            # if (await ss.execute(select(Document).where(Document.uuid==item.uuid).exists()))
+            docs = await ss.execute(select(Document).where(Document.uuid==item.uuid))
+
+            for doc in docs:
+                logger.warning(f"Document {item.name} № {item.number} {doc.uuid} was received earlier already")
+                return SignedResponse(status=ServiceStatus.ALREADY,
+                                      msg='Document was received earlier already',
+                                      uuid=doc.uuid)
+            else:
+                doc = Document(**dict(item,
+                                      data=data,
+                                      sign=sign,
+                                      signed_data=signed_data,
+                                      status=DocumentStatus.RECEIVED))
+                ss.add(doc)
+                # await ss.flush()
+                await ss.commit()
+                await ss.refresh(doc, ['uuid'])
+
+                logger.info(f"Document {item.name} № {item.number} signed and sent to upstream")
 
     except Exception as e:
         logger.error(f"Document {item.uuid} has errors: {str(e)}")

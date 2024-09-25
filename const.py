@@ -15,6 +15,7 @@ class ServiceStatus(str, Enum):
     BUSY = 'busy'
     NO_KEYS = 'no_keys'
     OK = 'OK'
+    ALREADY = 'already'
 
 
 class DiadocServiceStatus(StrEnum):
