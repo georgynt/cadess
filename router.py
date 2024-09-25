@@ -69,7 +69,7 @@ class SignedResponse(BaseModel):
 
 class DocStatusResponse(BaseModel):
     status: DocumentStatus
-    edo_status: str|None
+    edo_status: str|None = None
     uuid: UUID
     msg: str
 
@@ -179,13 +179,16 @@ async def document_status(guid: UUID) -> DocStatusResponse:
 
 @router.post("/documents/status", tags=['status'])
 async def document_status(request: DocsStatusRequest) -> list[DocStatusResponse]:
-    async with Session() as ss:
-        if docs := (await ss.execute(select(Document).where(Document.uuid.in_(request.uuids)))).scalars():
-            return [
-                DocStatusResponse(status=doc.status,
-                                  uuid=doc.uuid,
-                                  msg=get_msg(doc.status)) for doc in docs
-            ]
+    try:
+        async with Session() as ss:
+            if docs := (await ss.execute(select(Document).where(Document.uuid.in_(request.uuids)))).scalars():
+                return [
+                    DocStatusResponse(status=doc.status,
+                                      uuid=doc.uuid,
+                                      msg=get_msg(doc.status)) for doc in docs
+                ]
+    except Exception as e:
+        raise HTTPException(500, str(e))
 
 
 @router.get("/status-ref", tags=['status'])
