@@ -212,7 +212,7 @@ async def senddoc(item: DocumentRequest) -> SignedResponse:
         async with Session() as ss:
 
             # if (await ss.execute(select(Document).where(Document.uuid==item.uuid).exists()))
-            docs = await ss.execute(select(Document).where(Document.uuid==item.uuid)).scalars()
+            docs = (await ss.execute(select(Document).where(Document.uuid==item.uuid))).scalars()
 
             for doc in docs:
                 logger.warning(f"Document {item.name} № {item.number} {doc.uuid} was received earlier already")
