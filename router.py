@@ -14,11 +14,12 @@ from pydantic import BaseModel
 from config import Config
 from const import DiadocServiceStatus, DocumentStatus, DocumentStatusRus, ServiceStatus
 from db import Document, Session
-from diadoc.connector import AuthdDiadocAPI
+from diadoc.connector import AuthdDiadocAPI, ConfiguredDiadocAPI, DiadocAPI
 from logic import LogicMock, Logic
 
 
 __cades = None
+
 
 def CadesLogic():
     global __cades
@@ -31,7 +32,10 @@ def CadesLogic():
             __cades = Logic()
     return __cades
 
+
 router = APIRouter(prefix="/cades")
+
+
 # CadesLogic() так делать нельзя. При установке/удалении сервиса происходит попытка считывания. Оно не надо
 
 class Cert(BaseModel):
@@ -46,9 +50,9 @@ class Status(BaseModel):
 
 class DocumentRequest(BaseModel):
     source_box: UUID
-    dest_box: UUID | None = None
-    dest_inn: str | None = None
-    dest_kpp: str | None = None
+    dest_box: UUID|None = None
+    dest_inn: str|None = None
+    dest_kpp: str|None = None
 
     uuid: UUID
     name: str
@@ -64,12 +68,13 @@ class DocumentRequest(BaseModel):
 class SignedResponse(BaseModel):
     status: ServiceStatus
     msg: str
-    uuid: UUID | None = None
+    uuid: UUID|None = None
 
 
 class DocStatusResponse(BaseModel):
     status: DocumentStatus
     edo_status: str|None = None
+    edo_status_descr: str|None = None
     uuid: UUID
     msg: str
 
@@ -170,11 +175,24 @@ def get_msg(doc_status: DocumentStatus) -> str:
 async def document_status(guid: UUID) -> DocStatusResponse:
     async with Session() as ss:
         if doc := (await ss.execute(select(Document).where(Document.uuid == guid))).scalar():
+            dd = ConfiguredDiadocAPI()
+            dd.authenticate(doc.login, doc.password)
+            stt = dd.get_document_status(doc.source_box, doc.message_id, doc.uuid)
             msg = get_msg(doc.status)
-            return DocStatusResponse(status=doc.status, uuid=doc.uuid, msg=msg)
+            return DocStatusResponse(status=doc.status, edo_status=stt.Severity,
+                                     edo_status_descr=stt.StatusText, uuid=doc.uuid, msg=msg)
         else:
             return DocStatusResponse(status=DocumentStatus.NOT_FOUND, uuid=guid,
                                      msg='Документ не найден. Возможно он был отправлен в ДИАДОК')
+
+
+async def gen_doc_status_response(dd: DiadocAPI, doc: Document, login: str, passwd: str) -> DocStatusResponse:
+    doc_stt = await dd.aget_document_status(doc.source_box, doc.message_id, doc.uuid)
+    return DocStatusResponse(status=doc.status,
+                             edo_status=doc_stt.Severity,
+                             edo_status_descr=doc_stt.StatusText,
+                             uuid=doc.uuid,
+                             msg=get_msg(doc.status))
 
 
 @router.post("/documents/status", tags=['status'])
@@ -182,11 +200,19 @@ async def document_status(request: DocsStatusRequest) -> list[DocStatusResponse]
     try:
         async with Session() as ss:
             if docs := (await ss.execute(select(Document).where(Document.uuid.in_(request.uuids)))).scalars():
+                login, pswd = list(set((d.login, d.password) for d in docs)).pop()
+                dd = ConfiguredDiadocAPI()
+                dd.authenticate(login, pswd)
+
                 return [
-                    DocStatusResponse(status=doc.status,
-                                      uuid=doc.uuid,
-                                      msg=get_msg(doc.status)) for doc in docs
+                    await gen_doc_status_response(dd, doc, login, pswd)
+                        for doc in docs
                 ]
+                # return [
+                #     DocStatusResponse(status=doc.status,
+                #                       uuid=doc.uuid,
+                #                       msg=get_msg(doc.status)) for doc in docs
+                # ]
     except Exception as e:
         raise HTTPException(500, str(e))
 
@@ -196,7 +222,7 @@ async def status_ref() -> list[DocumentStatusRef]:
     return [
         DocumentStatusRef(status=stt,
                           descr=DocumentStatusRus[stt.name])
-            for stt in DocumentStatus
+        for stt in DocumentStatus
     ]
 
 
@@ -212,7 +238,7 @@ async def senddoc(item: DocumentRequest) -> SignedResponse:
         async with Session() as ss:
 
             # if (await ss.execute(select(Document).where(Document.uuid==item.uuid).exists()))
-            docs = (await ss.execute(select(Document).where(Document.uuid==item.uuid))).scalars()
+            docs = (await ss.execute(select(Document).where(Document.uuid == item.uuid))).scalars()
 
             for doc in docs:
                 logger.warning(f"Document {item.name} № {item.number} {doc.uuid} was received earlier already")
@@ -240,4 +266,3 @@ async def senddoc(item: DocumentRequest) -> SignedResponse:
     return SignedResponse(status=ServiceStatus.OK,
                           msg='Document signed and sent to upstream',
                           uuid=doc.uuid)
-

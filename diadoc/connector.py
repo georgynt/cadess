@@ -1,9 +1,12 @@
+import asyncio
 from urllib.parse import urljoin
 from uuid import UUID, uuid4
 
 from requests import Response, Session
 
-from diadoc.struct import (Counteragent, CounteragentList, DocumentId, GetDocflowBatchRequest, GetDocflowRequest,
+from diadoc.struct import (Counteragent, CounteragentList, DocflowStatusModel, DocumentV3, DocumentId,
+                           GetDocflowBatchRequest,
+                           GetDocflowRequest,
                            Message,
                            MessageToPost, Organization,
                            OrganizationList)
@@ -165,9 +168,9 @@ class DiadocAPI:
             return res.json()
         return res.content.decode()
 
-    def get_docflows(self, boxId: UUID, message_id: UUID, document_id: UUID) -> list|str:
+    def get_docflows(self, boxId: UUID, messageId: UUID, documentId: UUID) -> list|str:
         data = GetDocflowBatchRequest(GetDocflowsRequests=[
-                GetDocflowRequest(DocumentId=DocumentId(MessageId=message_id, EntityId=document_id))
+                GetDocflowRequest(DocumentId=DocumentId(MessageId=messageId, EntityId=documentId))
             ]).model_dump_json()
         res = self.sess.post("/V3/GetDocflows",
                              params={"boxId": str(boxId)},
@@ -175,6 +178,22 @@ class DiadocAPI:
         if self.is_last_ok():
             return res.json()['Documents']
         return res.content.decode()
+
+    def get_document(self, boxId: UUID, messageId: UUID, documentId: UUID) -> DocumentV3|str:
+        res = self.sess.get("/V3/GetDocument", params={"boxId": str(boxId),
+                                                       "messageId": str(messageId),
+                                                       "entityId": str(documentId)})
+        if self.is_last_ok():
+            return DocumentV3.parse_raw(res.content)
+        return res.content.decode()
+
+    def get_document_status(self, boxId: UUID, messageId: UUID, documentId: UUID) -> DocflowStatusModel|None:
+        if isinstance(doc := self.get_document(boxId, messageId, documentId), DocumentV3):
+            return doc.DocflowStatus.PrimaryStatus
+        return None
+
+    async def aget_document_status(self, boxId: UUID, messageId: UUID, documentId: UUID) -> DocflowStatusModel|None:
+        return await asyncio.to_thread(self.get_document_status, boxId, messageId, documentId)
 
 
 class ConfiguredDiadocAPI(DiadocAPI):

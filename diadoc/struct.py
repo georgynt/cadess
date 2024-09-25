@@ -173,3 +173,19 @@ class GetDocflowRequest(CadesStruct):
 
 class GetDocflowBatchRequest(CadesStruct):
     GetDocflowsRequests: list[GetDocflowRequest]
+
+
+class DocflowStatusModel(CadesStruct):
+    Severity: Optional[str] = None
+    StatusText: Optional[str] = None
+
+
+class DocflowStatus(CadesStruct):
+    PrimaryStatus: DocflowStatusModel
+    SecondaryStatus: Optional[DocflowStatusModel] = None
+    PowerOfAttorneyGeneralStatus: Optional[dict] = None
+    GeneralRoamingSendingStatus: Optional[dict] = None
+
+
+class DocumentV3(CadesStruct):
+    DocflowStatus: DocflowStatus
