@@ -173,17 +173,20 @@ def get_msg(doc_status: DocumentStatus) -> str:
 
 @router.get("/documents/{guid}/status", tags=['status'])
 async def document_status(guid: UUID) -> DocStatusResponse:
-    async with Session() as ss:
-        if doc := (await ss.execute(select(Document).where(Document.uuid == guid))).scalar():
-            dd = ConfiguredDiadocAPI()
-            dd.authenticate(doc.login, doc.password)
-            stt = dd.get_document_status(doc.source_box, doc.message_id, doc.uuid)
-            msg = get_msg(doc.status)
-            return DocStatusResponse(status=doc.status, edo_status=stt.Severity,
-                                     edo_status_descr=stt.StatusText, uuid=doc.uuid, msg=msg)
-        else:
-            return DocStatusResponse(status=DocumentStatus.NOT_FOUND, uuid=guid,
-                                     msg='Документ не найден. Возможно он был отправлен в ДИАДОК')
+    try:
+        async with Session() as ss:
+            if doc := (await ss.execute(select(Document).where(Document.uuid == guid))).scalar():
+                dd = ConfiguredDiadocAPI()
+                dd.authenticate(doc.login, doc.password)
+                stt = dd.get_document_status(doc.source_box, doc.message_id, doc.uuid)
+                msg = get_msg(doc.status)
+                return DocStatusResponse(status=doc.status, edo_status=stt.Severity,
+                                         edo_status_descr=stt.StatusText, uuid=doc.uuid, msg=msg)
+            else:
+                return DocStatusResponse(status=DocumentStatus.NOT_FOUND, uuid=guid,
+                                         msg='Документ не найден. Возможно он был отправлен в ДИАДОК')
+    except Exception as e:
+        raise HTTPException(500, str(e))
 
 
 async def gen_doc_status_response(dd: DiadocAPI, doc: Document, login: str, passwd: str) -> DocStatusResponse:
