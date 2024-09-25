@@ -51,9 +51,6 @@ def send_document(doc: Document) -> Document:
                                Signature=doc.sign,
                                SignWithTestSignature=conf.test_sign)
 
-            if not doc.message_id:
-                doc.message_id = uuid4()
-
             da = DocumentAttachment(
                 SignedContent=sc,
                 TypeNamedId=DiadocDocumentType.ProformaInvoice,
@@ -76,6 +73,10 @@ def send_document(doc: Document) -> Document:
                 logger.info(msg)
                 doc.status = DocumentStatus.SENT # тут надо сделать проверку, какой ответ получили
                 doc.error_msg = None
+                doc.message_id = msg.MessageId
+                if ent := next((e for e in msg.Entities if e['EntityType'] == 'Attachment'), None):
+                    doc.entity_id = ent.get('EntityId', None)
+
             elif isinstance(msg, Response):
                 if msg.status_code not in (200,201):
                     logger.error(msg.content)

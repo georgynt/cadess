@@ -23,6 +23,7 @@ class Document(Base):
     __tablename__ = 'documents'
     uuid = Column(Uuid(), primary_key=True, default=uuid4)
     message_id = Column(Uuid(), nullable=True)
+    entity_id = Column(Uuid(), nullable=True)
 
     source_box = Column(Uuid(), nullable=False)
     dest_box = Column(Uuid(), nullable=True) # Может быть пустым, пока не нашли
