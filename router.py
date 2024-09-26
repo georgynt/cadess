@@ -208,9 +208,15 @@ async def document_status(request: DocsStatusRequest) -> list[DocStatusResponse]
                 dd.authenticate(login, pswd)
 
                 return [
-                    await gen_doc_status_response(dd, doc, login, pswd)
+                    DocStatusResponse(status=doc.status,
+                                      uuid=doc.uuid,
+                                      msg=get_msg(doc.status))
                         for doc in docs
                 ]
+                # return [
+                #     await gen_doc_status_response(dd, doc, login, pswd)
+                #         for doc in docs
+                # ]
 
     except Exception as e:
         logger.error(str(e))
