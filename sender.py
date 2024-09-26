@@ -1,6 +1,6 @@
 import asyncio
 from asyncio import sleep
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from requests import Response
 from sqlalchemy import select
@@ -73,9 +73,9 @@ def send_document(doc: Document) -> Document:
                 logger.info(msg)
                 doc.status = DocumentStatus.SENT # тут надо сделать проверку, какой ответ получили
                 doc.error_msg = None
-                doc.message_id = msg.MessageId
+                doc.message_id = UUID(msg.MessageId)
                 if ent := next((e for e in msg.Entities if e['EntityType'] == 'Attachment'), None):
-                    doc.entity_id = ent.get('EntityId', None)
+                    doc.entity_id = UUID(ent.get('EntityId', None))
 
             elif isinstance(msg, Response):
                 if msg.status_code not in (200,201):
