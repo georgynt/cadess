@@ -1,5 +1,6 @@
 import asyncio
 from asyncio import sleep
+from datetime import date
 from uuid import UUID, uuid4
 
 from requests import Response
@@ -73,6 +74,7 @@ def send_document(doc: Document) -> Document:
                 logger.info(msg)
                 doc.status = DocumentStatus.SENT # тут надо сделать проверку, какой ответ получили
                 doc.error_msg = None
+                doc.date = date.today()
                 doc.message_id = UUID(msg.MessageId)
                 if ent := next((e for e in msg.Entities if e['EntityType'] == 'Attachment'), None):
                     doc.entity_id = UUID(ent.get('EntityId', None))
@@ -114,7 +116,7 @@ async def handle_documents() -> None:
         except Exception as e:
             logger.error(str(e))
 
-        await sleep(60)
+        await sleep(10)
 
 
 async def init_repeat_task() -> None:

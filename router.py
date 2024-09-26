@@ -76,6 +76,7 @@ class DocStatusResponse(BaseModel):
     edo_status: str|None = None
     edo_status_descr: str|None = None
     uuid: UUID
+    dte: date|None = None
     msg: str
 
 
@@ -175,16 +176,17 @@ def get_msg(doc_status: DocumentStatus) -> str:
 async def document_status(guid: UUID) -> DocStatusResponse:
     try:
         async with Session() as ss:
-            if doc := (await ss.execute(select(Document).where(Document.uuid == guid))).first():
+            if doc := (await ss.execute(select(Document).where(Document.uuid == guid))).scalar():
                 dd = ConfiguredDiadocAPI()
                 dd.authenticate(doc.login, doc.password)
                 stt = dd.get_document_status(doc.source_box, doc.message_id, doc.entity_id)
                 msg = get_msg(doc.status)
                 return DocStatusResponse(status=doc.status, edo_status=stt.Severity,
-                                         edo_status_descr=stt.StatusText, uuid=doc.uuid, msg=msg)
+                                         edo_status_descr=stt.StatusText, uuid=doc.uuid,
+                                         dte=doc.date, msg=msg)
             else:
                 return DocStatusResponse(status=DocumentStatus.NOT_FOUND, uuid=guid,
-                                         msg='Документ не найден. Возможно он был отправлен в ДИАДОК')
+                                         msg='Документ не найден. Возможно он был отправлен в ДИАДОК, но затем удалён')
     except Exception as e:
         raise HTTPException(500, str(e))
 
@@ -195,6 +197,7 @@ async def gen_doc_status_response(dd: DiadocAPI, doc: Document, login: str, pass
                              edo_status=doc_stt.Severity if doc_stt else None,
                              edo_status_descr=doc_stt.StatusText if doc_stt else None,
                              uuid=doc.uuid,
+                             date=doc.date,
                              msg=get_msg(doc.status))
 
 
@@ -210,7 +213,7 @@ async def document_status(request: DocsStatusRequest) -> list[DocStatusResponse]
 
                 return [
                     await gen_doc_status_response(dd, doc, login, pswd)
-                        for doc in docs
+                    for doc in docs
                 ]
             return []
 
@@ -222,7 +225,6 @@ async def document_status(request: DocsStatusRequest) -> list[DocStatusResponse]
 @router.get("/test", tags=['test'])
 async def test() -> str:
     raise HTTPException(422, "TEST")
-
 
 
 @router.get("/status-ref", tags=['status'])

@@ -1,7 +1,7 @@
 from os.path import join
 from uuid import uuid4
 
-from sqlalchemy import BINARY, Column, DECIMAL, Date, String, Uuid, create_engine, Enum, INT
+from sqlalchemy import BINARY, Column, DECIMAL, Date, DateTime, String, Uuid, create_engine, Enum, INT
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.orm import declarative_base
 
