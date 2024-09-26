@@ -192,8 +192,8 @@ async def document_status(guid: UUID) -> DocStatusResponse:
 async def gen_doc_status_response(dd: DiadocAPI, doc: Document, login: str, passwd: str) -> DocStatusResponse:
     doc_stt = await dd.aget_document_status(doc.source_box, doc.message_id, doc.entity_id)
     return DocStatusResponse(status=doc.status,
-                             edo_status=doc_stt.Severity,
-                             edo_status_descr=doc_stt.StatusText,
+                             edo_status=doc_stt.Severity if doc_stt else None,
+                             edo_status_descr=doc_stt.StatusText if doc_stt else None,
                              uuid=doc.uuid,
                              msg=get_msg(doc.status))
 
