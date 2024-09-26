@@ -223,6 +223,12 @@ async def document_status(request: DocsStatusRequest) -> list[DocStatusResponse]
         raise HTTPException(500, str(e))
 
 
+@router.get("/test", tags=['test'])
+async def test() -> str:
+    raise HTTPException(422, "TEST")
+    
+
+
 @router.get("/status-ref", tags=['status'])
 async def status_ref() -> list[DocumentStatusRef]:
     return [
