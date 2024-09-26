@@ -208,15 +208,10 @@ async def document_status(request: DocsStatusRequest) -> list[DocStatusResponse]
                 dd.authenticate(login, pswd)
 
                 return [
-                    DocStatusResponse(status=doc.status,
-                                      uuid=doc.uuid,
-                                      msg=get_msg(doc.status))
+                    await gen_doc_status_response(dd, doc, login, pswd)
                         for doc in docs
                 ]
-                # return [
-                #     await gen_doc_status_response(dd, doc, login, pswd)
-                #         for doc in docs
-                # ]
+            return []
 
     except Exception as e:
         logger.error(str(e))
@@ -226,7 +221,7 @@ async def document_status(request: DocsStatusRequest) -> list[DocStatusResponse]
 @router.get("/test", tags=['test'])
 async def test() -> str:
     raise HTTPException(422, "TEST")
-    
+
 
 
 @router.get("/status-ref", tags=['status'])
