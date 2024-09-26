@@ -181,8 +181,10 @@ async def document_status(guid: UUID) -> DocStatusResponse:
                 dd.authenticate(doc.login, doc.password)
                 stt = dd.get_document_status(doc.source_box, doc.message_id, doc.entity_id)
                 msg = get_msg(doc.status)
-                return DocStatusResponse(status=doc.status, edo_status=stt.Severity,
-                                         edo_status_descr=stt.StatusText, uuid=doc.uuid,
+                return DocStatusResponse(status=doc.status,
+                                         edo_status=stt.Severity if stt else None,
+                                         edo_status_descr=stt.StatusText if stt else None,
+                                         uuid=doc.uuid,
                                          dte=doc.date, msg=msg)
             else:
                 return DocStatusResponse(status=DocumentStatus.NOT_FOUND, uuid=guid,
@@ -197,7 +199,7 @@ async def gen_doc_status_response(dd: DiadocAPI, doc: Document, login: str, pass
                              edo_status=doc_stt.Severity if doc_stt else None,
                              edo_status_descr=doc_stt.StatusText if doc_stt else None,
                              uuid=doc.uuid,
-                             date=doc.date,
+                             dte=doc.date,
                              msg=get_msg(doc.status))
 
 
