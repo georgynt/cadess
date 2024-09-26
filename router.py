@@ -203,11 +203,8 @@ async def document_status(request: DocsStatusRequest) -> list[DocStatusResponse]
     try:
         async with Session() as ss:
             print(request.uuids)
-            if docs := (await ss.execute(select(Document).where(Document.uuid.in_(request.uuids)))).scalars():
-                print(docs := list(docs))
-                lst = list(set((d.login, d.password) for d in docs))
-                print(lst)
-                login, pswd = lst[0]
+            if docs := list((await ss.execute(select(Document).where(Document.uuid.in_(request.uuids)))).scalars()):
+                login, pswd = list(set((d.login, d.password) for d in docs)).pop()
                 dd = ConfiguredDiadocAPI()
                 dd.authenticate(login, pswd)
 
