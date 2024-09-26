@@ -175,7 +175,7 @@ def get_msg(doc_status: DocumentStatus) -> str:
 async def document_status(guid: UUID) -> DocStatusResponse:
     try:
         async with Session() as ss:
-            if doc := (await ss.execute(select(Document).where(Document.uuid == guid))).scalar():
+            if doc := (await ss.execute(select(Document).where(Document.uuid == guid))).first():
                 dd = ConfiguredDiadocAPI()
                 dd.authenticate(doc.login, doc.password)
                 stt = dd.get_document_status(doc.source_box, doc.message_id, doc.entity_id)
@@ -238,7 +238,7 @@ async def senddoc(item: DocumentRequest) -> SignedResponse:
         async with Session() as ss:
 
             # if (await ss.execute(select(Document).where(Document.uuid==item.uuid).exists()))
-            docs = (await ss.execute(select(Document).where(Document.uuid == item.uuid))).scalars()
+            docs = (await ss.execute(select(Document).where(Document.uuid == item.uuid))).all()
 
             for doc in docs:
                 logger.warning(f"Document {item.name} № {item.number} {doc.uuid} was received earlier already")
