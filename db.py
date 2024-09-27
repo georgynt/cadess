@@ -36,6 +36,7 @@ class Document(Base):
     vat = Column(DECIMAL(17, 5), default=0)
     grounds = Column(String(256), nullable=True)
     date = Column(Date())
+    send_time = Column(DateTime())
     data = Column(BINARY)
     sign = Column(BINARY)
     signed_data = Column(BINARY)

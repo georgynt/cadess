@@ -1,21 +1,16 @@
 from base64 import b64decode
-from uuid import UUID
 
+from fastapi import HTTPException
+from fastapi.routing import APIRouter
 from sqlalchemy import select
 
 import logger
-from datetime import date
-from decimal import Decimal
-
-from fastapi import File, HTTPException, UploadFile
-from fastapi.routing import APIRouter
-from pydantic import BaseModel
-
 from config import Config
-from const import DiadocServiceStatus, DocumentStatus, DocumentStatusRus, ServiceStatus
+from const import DocumentStatusRus
 from db import Document, Session
 from diadoc.connector import AuthdDiadocAPI, ConfiguredDiadocAPI, DiadocAPI
-from logic import LogicMock, Logic
+from logic import Logic, LogicMock
+from router.types import *
 
 
 __cades = None
@@ -34,59 +29,6 @@ def CadesLogic():
 
 
 router = APIRouter(prefix="/cades")
-
-
-# CadesLogic() так делать нельзя. При установке/удалении сервиса происходит попытка считывания. Оно не надо
-
-class Cert(BaseModel):
-    number: str
-    name: str
-
-
-class Status(BaseModel):
-    code: int
-    name: ServiceStatus|DiadocServiceStatus
-
-
-class DocumentRequest(BaseModel):
-    source_box: UUID
-    dest_box: UUID|None = None
-    dest_inn: str|None = None
-    dest_kpp: str|None = None
-
-    uuid: UUID
-    name: str
-    number: str
-    date: date
-    amount: Decimal
-    data: str
-
-    login: str
-    password: str
-
-
-class SignedResponse(BaseModel):
-    status: ServiceStatus
-    msg: str
-    uuid: UUID|None = None
-
-
-class DocStatusResponse(BaseModel):
-    status: DocumentStatus
-    edo_status: str|None = None
-    edo_status_descr: str|None = None
-    uuid: UUID
-    dte: date|None = None
-    msg: str
-
-
-class DocsStatusRequest(BaseModel):
-    uuids: list[UUID]
-
-
-class DocumentStatusRef(BaseModel):
-    status: DocumentStatus
-    descr: str
 
 
 @router.get("/keys", tags=['keys'])
@@ -185,9 +127,10 @@ async def document_status(guid: UUID) -> DocStatusResponse:
                                          edo_status=stt.Severity if stt else None,
                                          edo_status_descr=stt.StatusText if stt else None,
                                          uuid=doc.uuid,
-                                         dte=doc.date, msg=msg)
+                                         dte=doc.send_time,
+                                         msg=msg)
             else:
-                return DocStatusResponse(status=DocumentStatus.NOT_FOUND, uuid=guid,
+                return DocStatusResponse(status=None, uuid=guid,
                                          msg='Документ не найден. Возможно он был отправлен в ДИАДОК, но затем удалён')
     except Exception as e:
         raise HTTPException(500, str(e))
@@ -199,7 +142,7 @@ async def gen_doc_status_response(dd: DiadocAPI, doc: Document, login: str, pass
                              edo_status=doc_stt.Severity if doc_stt else None,
                              edo_status_descr=doc_stt.StatusText if doc_stt else None,
                              uuid=doc.uuid,
-                             dte=doc.date,
+                             dte=doc.send_time,
                              msg=get_msg(doc.status))
 
 
@@ -222,11 +165,6 @@ async def document_status(request: DocsStatusRequest) -> list[DocStatusResponse]
     except Exception as e:
         logger.error(str(e))
         raise HTTPException(500, str(e))
-
-
-@router.get("/test", tags=['test'])
-async def test() -> str:
-    raise HTTPException(422, "TEST")
 
 
 @router.get("/status-ref", tags=['status'])
@@ -253,10 +191,23 @@ async def senddoc(item: DocumentRequest) -> SignedResponse:
             docs = (await ss.execute(select(Document).where(Document.uuid == item.uuid))).scalars()
 
             for doc in docs:
-                logger.warning(f"Document {item.name} № {item.number} {doc.uuid} was received earlier already")
-                return SignedResponse(status=ServiceStatus.ALREADY,
-                                      msg='Document was received earlier already',
-                                      uuid=doc.uuid)
+                if doc.status == DocumentStatus.FAIL:
+                    doc.status = DocumentStatus.PROGRESS
+                    for k,v in dict(item).items():
+                        if k == 'uuid': continue
+                        setattr(doc, k, v)
+
+                    ss.add(doc)
+                    await ss.commit()
+                    logger.info(f"Document {doc.name} №{doc.number} {doc.uuid} was sent again")
+                    return SignedResponse(status=ServiceStatus.OK,
+                                          msg='Document is restarted for send',
+                                          uuid=doc.uuid)
+                else:
+                    logger.warning(f"Document {item.name} № {item.number} {doc.uuid} was received earlier already")
+                    return SignedResponse(status=ServiceStatus.ALREADY,
+                                          msg='Document was received earlier already',
+                                          uuid=doc.uuid)
             else:
                 doc = Document(**dict(item,
                                       data=data,

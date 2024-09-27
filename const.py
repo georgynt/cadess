@@ -34,7 +34,7 @@ class DocumentStatus(StrEnum):
     SENT = 'sent'
     FAKELY_SENT = 'fake_sent'
     FAIL = 'fail'
-    NOT_FOUND = 'not-found'
+    # NOT_FOUND = 'not-found'
     RECEIVED = 'received'
     UNKNOWN = 'unkwnown'
 
