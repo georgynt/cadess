@@ -29,7 +29,8 @@ def send_document(doc: Document) -> Document:
         dda = AuthdDiadocAPI()
 
     try:
-        dda.authenticate(doc.login, doc.password)
+        # dda.authenticate(doc.login, doc.password)
+        dda.authenticate(conf.diadoc_login, conf.diadoc_password)
         doc.status = DocumentStatus.PROGRESS
     except Exception as e:
         doc.status = DocumentStatus.FAIL
