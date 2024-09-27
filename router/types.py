@@ -32,8 +32,8 @@ class DocumentRequest(BaseModel):
     amount: Decimal
     data: str
 
-    login: str
-    password: str
+    login: str|None = None
+    password: str|None = None
 
 
 class SignedResponse(BaseModel):
