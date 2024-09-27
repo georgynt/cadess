@@ -34,6 +34,7 @@ def send_document(doc: Document) -> Document:
         doc.status = DocumentStatus.PROGRESS
     except Exception as e:
         doc.status = DocumentStatus.FAIL
+        doc.error_msg = str(e)
         doc.tries += 1
         return doc
 

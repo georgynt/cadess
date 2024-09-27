@@ -70,7 +70,6 @@ async def diadoc() -> Status:
     if dd.authenticate():
         return Status(code=1, name=DiadocServiceStatus.OK)
     else:
-        # return Status(code=-1, name=DiadocServiceStatus.NOT_AVAILABLE)
         raise HTTPException(404, "DIADOC service is not available")
 
 
@@ -100,18 +99,18 @@ async def diadoc_url(data: dict[str, str]) -> str:
     return "OK"
 
 
-def get_msg(doc_status: DocumentStatus) -> str:
-    match doc_status:
+def get_msg(doc: Document) -> str:
+    match doc.status:
         case DocumentStatus.PROGRESS:
             return 'Документ находится в процессе отправки в ДИАДОК'
         case DocumentStatus.FAIL:
-            return "Ошибка отправки документа"
+            return doc.error_msg or "Ошибка отправки документа"
         case DocumentStatus.SENT:
             return "Документ отправлен в ДИАДОК"
         case DocumentStatus.RECEIVED:
             return "Документ получен и скоро перейдёт в обработку"
         case _:
-            return "Документ в неизвестном статусе"
+            return doc.error_msg or "Документ в неизвестном статусе"
 
 
 @router.get("/documents/{guid}/status", tags=['status'])
@@ -121,13 +120,13 @@ async def document_status(guid: UUID) -> DocStatusResponse:
             if doc := (await ss.execute(select(Document).where(Document.uuid == guid))).scalar():
                 dd = AuthdDiadocAPI()
                 stt = dd.get_document_status(doc.source_box, doc.message_id, doc.entity_id)
-                msg = get_msg(doc.status)
+
                 return DocStatusResponse(status=doc.status,
                                          edo_status=stt.Severity if stt else None,
                                          edo_status_descr=stt.StatusText if stt else None,
                                          uuid=doc.uuid,
                                          dte=doc.send_time,
-                                         msg=msg)
+                                         msg=get_msg(doc))
             else:
                 return DocStatusResponse(status=None, uuid=guid,
                                          msg='Документ не найден. Возможно он был отправлен в ДИАДОК, но затем удалён')
@@ -142,7 +141,7 @@ async def gen_doc_status_response(dd: DiadocAPI, doc: Document) -> DocStatusResp
                              edo_status_descr=doc_stt.StatusText if doc_stt else None,
                              uuid=doc.uuid,
                              dte=doc.send_time,
-                             msg=get_msg(doc.status))
+                             msg=get_msg(doc))
 
 
 @router.post("/documents/status", tags=['status'])

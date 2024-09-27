@@ -38,6 +38,14 @@ class DocumentStatus(StrEnum):
     RECEIVED = 'received'
     UNKNOWN = 'unkwnown'
 
+    @classmethod
+    def bad(cls, status: "DocumentStatus") -> bool:
+        return status in (cls.FAIL, cls.UNKNOWN)
+
+    @classmethod
+    def good(cls, status: "DocumentStatus") -> bool:
+        return status in (cls.SENT, cls.PROGRESS, cls.RECEIVED)
+
 
 class DocumentStatusRus(StrEnum):
     PROGRESS = 'В обработке'
