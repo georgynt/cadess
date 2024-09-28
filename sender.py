@@ -1,7 +1,8 @@
-import asyncio, aiohttp
+import aiohttp
+import asyncio
 from asyncio import sleep
-from datetime import date, datetime
-from uuid import UUID, uuid4
+from datetime import datetime
+from uuid import UUID
 
 from requests import Response
 from sqlalchemy import select
@@ -10,54 +11,59 @@ import logger
 from config import Config
 from const import DocumentStatus
 from db import Document, Session
-from diadoc.connector import AuthdDiadocAPI, ConfiguredDiadocAPI, DiadocAPI
+from diadoc.connector import AuthdDiadocAPI
 from diadoc.enums import DiadocDocumentType
 from diadoc.exceptions import AuthError
 from diadoc.struct import (Counteragent, DocumentAttachment, DocumentV3, Message, MessageToPost, MetadataItem,
                            SignedContent)
 
 
-async def run_callbacks(odoc: Document, ndoc: Document):
-    if odoc.status != ndoc.status or odoc.diadoc_status != ndoc.diadoc_status:
+async def run_callbacks(doc: Document):
+    # if odoc.status != ndoc.status or odoc.diadoc_status != ndoc.diadoc_status:
+    if True:
         try:
             conf = Config()
 
             async with aiohttp.ClientSession() as ss:
                 for clbk in conf.callback_urls:
-                    rsl = await ss.post(clbk,
-                                        json={"uuid"            : ndoc.uuid,
-                                              "status"          : ndoc.status,
-                                              "edo_status"      : ndoc.diadoc_status,
-                                              "edo_status_descr": ndoc.diadoc_status_descr})
+                    async with ss.post(clbk,
+                                       json={"uuid"            : str(doc.uuid),
+                                             "status"          : str(doc.status),
+                                             "edo_status"      : doc.diadoc_status,
+                                             "edo_status_descr": doc.diadoc_status_descr}) as rsl:
+                        print(rsl)
         except Exception as e:
             logger.error(str(e))
 
 
-
-async def send_document(doc: Document) -> Document:
+async def send_document(doc: Document) -> bool:
     conf = Config()
+
+    if doc.tries > 5:
+        doc.status = DocumentStatus.FAIL
+        return True
 
     if conf.fake_logic:
         doc.status = DocumentStatus.FAKELY_SENT
         doc.error_msg = "The document was sent fakely"
-        return doc
+        return True
+        # return False
 
-    dda = AuthdDiadocAPI()
+    doc.status = DocumentStatus.PROGRESS
 
     try:
-        doc.status = DocumentStatus.PROGRESS
+        dda = AuthdDiadocAPI()
     except Exception as e:
-        doc.status = DocumentStatus.FAIL
         doc.error_msg = str(e)
         doc.tries += 1
-        return doc
+        return False
 
     sbox = doc.source_box
     if not (dbox := doc.dest_box):
         orgs = dda.get_orgs_by_innkpp(doc.dest_inn, doc.dest_kpp)
         if not len(orgs):
             doc.tries += 1
-            return doc
+            return False
 
         org = orgs[0]
         dbox = org.Boxes[0].BoxIdGuid
@@ -97,12 +103,14 @@ async def send_document(doc: Document) -> Document:
                     doc_struct = DocumentV3.parse_obj(ent.get("DocumentInfo", {}))
                     doc.diadoc_status = doc_struct.DocflowStatus.PrimaryStatus.Severity
                     doc.diadoc_status_descr = doc_struct.DocflowStatus.PrimaryStatus.StatusText
+                    return True
 
             elif isinstance(msg, Response):
                 if msg.status_code not in (200, 201):
                     logger.error(msg.content)
                     doc.status = DocumentStatus.FAIL
                     doc.error_msg = msg.content
+                    return True
                 else:
                     logger.info(msg.content)
 
@@ -115,8 +123,9 @@ async def send_document(doc: Document) -> Document:
         doc.status = DocumentStatus.FAIL
         doc.error_msg = f"Ошибка: {ctg}"
         doc.tries = 5
+        return True
 
-    return doc
+    return False
 
 
 async def handle_documents() -> None:
@@ -124,17 +133,18 @@ async def handle_documents() -> None:
         try:
             async with Session() as ss:
                 docs = await ss.execute(select(Document)
-                                        .where(Document.status.in_([DocumentStatus.RECEIVED, DocumentStatus.PROGRESS])
-                                               &(Document.tries < 5)).with_for_update(skip_locked=True))
+                                        .where(Document.status.in_([DocumentStatus.RECEIVED,
+                                                                    DocumentStatus.PROGRESS]))
+                                        .with_for_update(skip_locked=True))
                 for doc in docs.scalars():
-                    # newdoc = await asyncio.to_thread(send_document, doc)
-                    ndoc = await send_document(doc)
-                    ss.add(ndoc)
-                    await run_callbacks(doc, ndoc)
+                    t = await send_document(doc)
+                    ss.add(doc)
+                    if t:
+                        await run_callbacks(doc)
 
                 await ss.commit()
         except AuthError as e:
-            dda = AuthdDiadocAPI()
+            logger.error(f'Cant login into diadoc: {str(e)}')
         except Exception as e:
             logger.error(str(e))
 

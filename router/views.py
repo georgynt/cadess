@@ -120,20 +120,20 @@ async def document_status(guid: UUID) -> DocStatusResponse:
         async with Session() as ss:
             if doc := (await ss.execute(select(Document).where(Document.uuid == guid))).scalar():
                 dd = AuthdDiadocAPI()
-                stt = dd.get_document_status(doc.source_box, doc.message_id, doc.entity_id)
+                dsr = DocStatusResponse(status=doc.status, uuid=doc.uuid, dte=doc.send_time, msg=get_msg(doc))
 
-                if doc.diadoc_status != stt.Severity or doc.diadoc_status_descr != stt.StatusText:
-                    doc.diadoc_status = stt.Severity
-                    doc.diadoc_status_descr = stt.StatusText
-                    ss.add(doc)
-                    ss.commit()
+                if stt := dd.get_document_status(doc.source_box, doc.message_id, doc.entity_id):
+                    if doc.diadoc_status != stt.Severity or doc.diadoc_status_descr != stt.StatusText:
+                        doc.diadoc_status = stt.Severity
+                        doc.diadoc_status_descr = stt.StatusText
+                        ss.add(doc)
+                        ss.commit()
 
-                return DocStatusResponse(status=doc.status,
-                                         edo_status=stt.Severity if stt else None,
-                                         edo_status_descr=stt.StatusText if stt else None,
-                                         uuid=doc.uuid,
-                                         dte=doc.send_time,
-                                         msg=get_msg(doc))
+                    dsr.edo_status = stt.Severity
+                    dsr.edo_status_descr = stt.StatusText
+
+                return dsr
+
             else:
                 return DocStatusResponse(status=None, uuid=guid,
                                          msg='Документ не найден.')
@@ -221,10 +221,11 @@ async def senddoc(item: DocumentRequest) -> SignedResponse:
                 await ss.flush()
                 await ss.refresh(doc, with_for_update=True)
 
-                doc = await send_document(doc)
+                await send_document(doc)
 
                 ss.add(doc)
                 await ss.commit()
+                # await ss.refresh(doc, ['uuid'])
 
                 logger.info(f"Document {item.name} № {item.number} signed and sent to upstream")
 
@@ -232,7 +233,7 @@ async def senddoc(item: DocumentRequest) -> SignedResponse:
         logger.error(f"Document {item.uuid} has errors: {str(e)}")
         raise HTTPException(422, str(e))
 
-    logger.info(f"Document {doc.uuid} signed and queued for send")
+    # logger.info(f"Document {doc.uuid} signed and queued for send")
     return SignedResponse(status=ServiceStatus.OK,
                           msg='Document signed and sent to upstream',
-                          uuid=doc.uuid)
+                          uuid=item.uuid)
