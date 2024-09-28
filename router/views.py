@@ -8,9 +8,10 @@ import logger
 from config import Config
 from const import DocumentStatusRus
 from db import Document, Session
-from diadoc.connector import AuthdDiadocAPI, ConfiguredDiadocAPI, DiadocAPI
+from diadoc.connector import AuthdDiadocAPI, DiadocAPI
 from logic import Logic, LogicMock
 from router.types import *
+from sender import send_document
 
 
 __cades = None
@@ -121,6 +122,12 @@ async def document_status(guid: UUID) -> DocStatusResponse:
                 dd = AuthdDiadocAPI()
                 stt = dd.get_document_status(doc.source_box, doc.message_id, doc.entity_id)
 
+                if doc.diadoc_status != stt.Severity or doc.diadoc_status_descr != stt.StatusText:
+                    doc.diadoc_status = stt.Severity
+                    doc.diadoc_status_descr = stt.StatusText
+                    ss.add(doc)
+                    ss.commit()
+
                 return DocStatusResponse(status=doc.status,
                                          edo_status=stt.Severity if stt else None,
                                          edo_status_descr=stt.StatusText if stt else None,
@@ -129,7 +136,7 @@ async def document_status(guid: UUID) -> DocStatusResponse:
                                          msg=get_msg(doc))
             else:
                 return DocStatusResponse(status=None, uuid=guid,
-                                         msg='Документ не найден. Возможно он был отправлен в ДИАДОК, но затем удалён')
+                                         msg='Документ не найден.')
     except Exception as e:
         raise HTTPException(500, str(e))
 
@@ -154,7 +161,7 @@ async def document_status(request: DocsStatusRequest) -> list[DocStatusResponse]
 
                 return [
                     await gen_doc_status_response(dd, doc)
-                    for doc in docs
+                        for doc in docs
                 ]
             return []
 
@@ -211,9 +218,13 @@ async def senddoc(item: DocumentRequest) -> SignedResponse:
                                       signed_data=signed_data,
                                       status=DocumentStatus.RECEIVED))
                 ss.add(doc)
-                # await ss.flush()
+                await ss.flush()
+                await ss.refresh(doc, with_for_update=True)
+
+                doc = await send_document(doc)
+
+                ss.add(doc)
                 await ss.commit()
-                await ss.refresh(doc, ['uuid'])
 
                 logger.info(f"Document {item.name} № {item.number} signed and sent to upstream")
 

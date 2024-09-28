@@ -31,7 +31,8 @@ default_config_object = {
         "url": None,
         "login": None,
         "password": None
-    }
+    },
+    "callbacks": None
 }
 
 
@@ -149,6 +150,9 @@ class Config(FileSystemEventHandler, metaclass=Singleton):
     def test_sign(self) -> bool:
         return self._data.get('settings', {}).get('test-sign', False)
 
+    @property
+    def callback_urls(self) -> list[str]:
+        return self._data.get('callbacks', []) or []
 
 if __name__ == '__main__':
     try:

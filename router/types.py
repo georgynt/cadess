@@ -30,10 +30,10 @@ class DocumentRequest(BaseModel):
     number: str
     date: date
     amount: Decimal
-    data: str
+    vat: Decimal|None = None
+    grounds: str|None = None
 
-    login: str|None = None
-    password: str|None = None
+    data: str
 
 
 class SignedResponse(BaseModel):

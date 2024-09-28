@@ -21,30 +21,37 @@ Base = declarative_base()
 
 class Document(Base):
     __tablename__ = 'documents'
-    uuid = Column(Uuid(), primary_key=True, default=uuid4)
-    message_id = Column(Uuid(), nullable=True)
-    entity_id = Column(Uuid(), nullable=True)
-
+    # IDS
+    uuid = Column(Uuid(), primary_key=True)
+    message_id = Column(Uuid())
+    entity_id = Column(Uuid())
+    # source\dest
     source_box = Column(Uuid(), nullable=False)
-    dest_box = Column(Uuid(), nullable=True) # Может быть пустым, пока не нашли
-    dest_inn = Column(String(20), nullable=False)
-    dest_kpp = Column(String(20), nullable=True) # Может быть пустым у ИП
-
+    dest_box = Column(Uuid()) # Может быть пустым, пока не нашли
+    dest_inn = Column(String(20)) # Может быть пустым! (а если передали dest_box?)
+    dest_kpp = Column(String(20)) # Может быть пустым у ИП
+    # doc requisites
     name = Column(String(128))
     number = Column(String(64))
     amount = Column(DECIMAL(17, 5))
-    vat = Column(DECIMAL(17, 5), default=0)
-    grounds = Column(String(256), nullable=True)
+    vat = Column(DECIMAL(17, 5))
+    grounds = Column(String(256))
     date = Column(Date())
     send_time = Column(DateTime())
+    # content
     data = Column(BINARY)
     sign = Column(BINARY)
     signed_data = Column(BINARY)
+    # lifecycle
     status = Column(Enum(DocumentStatus), default=DocumentStatus.RECEIVED, nullable=False)
     tries = Column(INT, default=0, nullable=False)
-    error_msg = Column(String(512), nullable=True)
-    login = Column(String(128), nullable=True)
-    password = Column(String(128), nullable=True)
+    error_msg = Column(String(512))
+    # rudiments
+    login = Column(String(128))
+    password = Column(String(128))
+    # diadoc lifecycle
+    diadoc_status = Column(String(32))
+    diadoc_status_descr = Column(String(256))
 
     @property
     def date_as_str(self):
