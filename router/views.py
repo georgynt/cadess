@@ -197,8 +197,11 @@ async def senddoc(item: DocumentRequest) -> SignedResponse:
                 if doc.status == DocumentStatus.FAIL:
                     doc.status = DocumentStatus.PROGRESS
                     for k,v in dict(item).items():
-                        if k == 'uuid': continue
+                        if k in ['uuid','data']: continue
                         setattr(doc, k, v)
+                    doc.data = data
+                    doc.sign = sign
+                    doc.signed_data = signed_data
 
                     ss.add(doc)
                     await ss.commit()
