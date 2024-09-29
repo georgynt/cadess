@@ -191,7 +191,7 @@ async def senddoc(item: DocumentRequest) -> SignedResponse:
         async with Session() as ss:
 
             # if (await ss.execute(select(Document).where(Document.uuid==item.uuid).exists()))
-            docs = (await ss.execute(select(Document).where(Document.uuid == item.uuid))).scalars()
+            docs = (await ss.execute(select(Document).where(Document.uuid == item.uuid).with_for_update(skip_locked=True))).scalars()
 
             for doc in docs:
                 if doc.status == DocumentStatus.FAIL:
@@ -205,6 +205,7 @@ async def senddoc(item: DocumentRequest) -> SignedResponse:
 
                     ss.add(doc)
                     await ss.commit()
+                    await ss.refresh(doc)
                     logger.info(f"Document {doc.name} №{doc.number} {doc.uuid} was sent again")
                     return SignedResponse(status=ServiceStatus.OK,
                                           msg='Document is restarted for send',
