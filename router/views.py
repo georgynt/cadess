@@ -72,33 +72,33 @@ async def diadoc() -> Status:
         return Status(code=1, name=DiadocServiceStatus.OK)
     else:
         raise HTTPException(404, "DIADOC service is not available")
-
-
-@router.get('/client-id', tags=['client-id'])
-async def client_id() -> dict[str, str]:
-    config = Config()
-    return {"value": config.client_id or ""}
-
-
-@router.post('/client-id', tags=['client-id'])
-async def client_id(data: dict[str, str]) -> str:
-    config = Config()
-    config.client_id = data.get('value', config.client_id)
-    return "OK"
-
-
-@router.get('/diadoc-url', tags=['diadoc-url'])
-async def diadoc_url() -> dict[str, str]:
-    config = Config()
-    return {"url": config.diadoc_url or ""}
-
-
-@router.post('/diadoc-url', tags=['diadoc-url'])
-async def diadoc_url(data: dict[str, str]) -> str:
-    config = Config()
-    config.diadoc_url = data.get('url', config.diadoc_url)
-    return "OK"
-
+#
+#
+# @router.get('/client-id', tags=['client-id'])
+# async def client_id() -> dict[str, str]:
+#     config = Config()
+#     return {"value": config.client_id or ""}
+#
+#
+# @router.post('/client-id', tags=['client-id'])
+# async def client_id(data: dict[str, str]) -> str:
+#     config = Config()
+#     config.client_id = data.get('value', config.client_id)
+#     return "OK"
+#
+#
+# @router.get('/diadoc-url', tags=['diadoc-url'])
+# async def diadoc_url() -> dict[str, str]:
+#     config = Config()
+#     return {"url": config.diadoc_url or ""}
+#
+#
+# @router.post('/diadoc-url', tags=['diadoc-url'])
+# async def diadoc_url(data: dict[str, str]) -> str:
+#     config = Config()
+#     config.diadoc_url = data.get('url', config.diadoc_url)
+#     return "OK"
+#
 
 def get_msg(doc: Document) -> str:
     match doc.status:

@@ -1,4 +1,5 @@
 import asyncio
+from functools import singledispatchmethod
 from urllib.parse import urljoin
 from uuid import UUID
 
@@ -48,7 +49,7 @@ class AuthContainer(metaclass=Singleton):
 
     @property
     def api_token(self) -> str:
-        return getattr(self,'_api_token',None)
+        return getattr(self, '_api_token', None)
 
     @api_token.setter
     def api_token(self, value: str):
@@ -56,12 +57,12 @@ class AuthContainer(metaclass=Singleton):
 
     @api_token.deleter
     def api_token(self):
-        if hasattr(self,'_api_token'):
+        if hasattr(self, '_api_token'):
             del self._api_token
 
     @property
     def api_client_id(self) -> str:
-        return getattr(self,'_api_client_id',None)
+        return getattr(self, '_api_client_id', None)
 
     @api_client_id.setter
     def api_client_id(self, value: str):
@@ -255,9 +256,10 @@ class AuthdDiadocAPI(ConfiguredDiadocAPI):
         super().__init__()
         self.authenticate(self.cnf.diadoc_login, self.cnf.diadoc_password)  # ИМЕННО от SUPER!
 
-    def authenticate(self, login: str, password: str) -> bool:
+    def authenticate(self, login: str|None = None, password: str|None = None) -> bool:
         if not self.auth_c.is_authenticated:
-            return super().authenticate(login, password)
+            return super().authenticate(login or self.cnf.diadoc_login,
+                                        password or self.cnf.diadoc_password)
         return True
 
     def reauthenticate(self) -> bool:
