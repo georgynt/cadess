@@ -219,7 +219,7 @@ async def senddoc(item: DocumentRequest) -> SignedResponse:
                 doc = Document(**dict(item,
                                       data=data,
                                       sign=sign,
-                                      signed_data=signed_data,
+                                      signed_data=item.data,
                                       status=DocumentStatus.RECEIVED))
                 ss.add(doc)
                 await ss.flush()
