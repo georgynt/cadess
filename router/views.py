@@ -186,7 +186,7 @@ async def senddoc(item: DocumentRequest) -> SignedResponse:
     try:
         cades = CadesLogic()
         sign = cades.sign_data(data, config.pincode)
-        signed_data = cades.sign_data(data, config.pincode, False)
+        # signed_data = cades.sign_data(data, config.pincode, False)
 
         async with Session() as ss:
 
@@ -201,7 +201,7 @@ async def senddoc(item: DocumentRequest) -> SignedResponse:
                         setattr(doc, k, v)
                     doc.data = data
                     doc.sign = sign
-                    doc.signed_data = signed_data
+                    doc.signed_data = item.data
 
                     ss.add(doc)
                     await ss.commit()
