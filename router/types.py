@@ -33,7 +33,7 @@ class DocumentRequest(BaseModel):
     vat: Decimal|None = None
     grounds: str|None = None
 
-    data: str
+    data: bytes
 
 
 class SignedResponse(BaseModel):
