@@ -23,7 +23,6 @@ class IPAddrMiddleware(BaseHTTPMiddleware):
 class AuthMiddleware(BaseHTTPMiddleware):
 
     AUTH_METHOD = 'Cades'
-    DEFAULT_TOKEN = "q1w2e3r4t5y6u7i8o9p0"
     DIADOC_CLIENT_ID = 'DiadocClientId'
 
     UNDEFENDED_URLS = (
@@ -51,9 +50,10 @@ class AuthMiddleware(BaseHTTPMiddleware):
         if pretoken := request.headers.get('authorization'):
             method, token = pretoken.split(' ')
             if method == self.AUTH_METHOD:
-                if token == self.DEFAULT_TOKEN:
-                    return await call_next(request)
                 tokens = (md5_hex(f"{u}:{p}") for u,p in config.users.items())
+                if token in tokens:
+                    return await call_next(request)
+                tokens = config.users.values()
                 if token in tokens:
                     return await call_next(request)
 
