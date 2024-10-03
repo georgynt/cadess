@@ -30,7 +30,8 @@ async def run_callbacks(doc: Document):
                                        json={"uuid"            : str(doc.uuid),
                                              "status"          : str(doc.status),
                                              "edo_status"      : doc.diadoc_status,
-                                             "edo_status_descr": doc.diadoc_status_descr}) as rsl:
+                                             "edo_status_descr": doc.diadoc_status_descr},
+                                       ssl=False) as rsl:
                         print(rsl)
         except Exception as e:
             logger.error(str(e))

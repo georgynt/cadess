@@ -1,4 +1,6 @@
+import sys
 from base64 import b64decode
+import base64
 
 from fastapi import HTTPException
 from fastapi.routing import APIRouter
@@ -181,16 +183,14 @@ async def status_ref() -> list[DocumentStatusRef]:
 
 @router.post("/senddoc", tags=['send'])
 async def senddoc(item: DocumentRequest) -> SignedResponse:
-    data = b64decode(item.data)
     config = Config()
     try:
         cades = CadesLogic()
+        data = cades.prepare_data(item.data)
         sign = cades.sign_data(data, config.pincode)
-        # signed_data = cades.sign_data(data, config.pincode, False)
 
         async with Session() as ss:
 
-            # if (await ss.execute(select(Document).where(Document.uuid==item.uuid).exists()))
             docs = (await ss.execute(select(Document).where(Document.uuid == item.uuid).with_for_update(skip_locked=True))).scalars()
 
             for doc in docs:
