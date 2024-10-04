@@ -1,11 +1,11 @@
 import sys
 from enum import Enum, StrEnum
-
+from os import environ
 
 if sys.platform == 'win32':
-    SRV_PORT = 443
+    SRV_PORT = int(environ.get('CADES_PORT', 443)) or 443
 else:
-    SRV_PORT = 8080
+    SRV_PORT = int(environ.get('CADES_PORT', 8080)) or 8080
 
 LOG_LEVEL = "debug"
 WORKERS = 4

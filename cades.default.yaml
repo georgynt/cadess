@@ -1,0 +1,14 @@
+diadoc:
+  client-id: app_client_id
+  login: login
+  password: password
+  url: https://diadoc-api.kontur.ru
+settings:
+  certificate-store: 4
+  certnumber: certnumber
+  fake-logic: false
+  pincode: pincode
+users:
+  admin: 4a6a6c7f2cdd12a826e2f15675a6c6ac
+whitelist:
+callbacks:

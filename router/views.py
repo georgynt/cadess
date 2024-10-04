@@ -199,7 +199,7 @@ async def senddoc(item: DocumentRequest) -> SignedResponse:
                     for k,v in dict(item).items():
                         if k in ['uuid','data']: continue
                         setattr(doc, k, v)
-                    doc.data = data
+                    # doc.data = data
                     doc.sign = sign
                     doc.signed_data = item.data
 
@@ -217,7 +217,7 @@ async def senddoc(item: DocumentRequest) -> SignedResponse:
                                           uuid=doc.uuid)
             else:
                 doc = Document(**dict(item,
-                                      data=data,
+                                      # data=data,
                                       sign=sign,
                                       signed_data=item.data,
                                       status=DocumentStatus.RECEIVED))

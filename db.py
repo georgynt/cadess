@@ -39,7 +39,7 @@ class Document(Base):
     date = Column(Date())
     send_time = Column(DateTime())
     # content
-    data = Column(BINARY)
+    # data = Column(BINARY)
     sign = Column(BINARY)
     signed_data = Column(BINARY)
     # lifecycle

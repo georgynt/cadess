@@ -101,7 +101,7 @@ class Config(FileSystemEventHandler, metaclass=Singleton):
 
     @property
     def pincode(self) -> str:
-        return self.settings.get('pincode', '')
+        return str(self.settings.get('pincode', ''))
 
     @property
     def client_id(self) -> str:
