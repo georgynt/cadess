@@ -199,7 +199,6 @@ async def senddoc(item: DocumentRequest) -> SignedResponse:
                     for k,v in dict(item).items():
                         if k in ['uuid','data']: continue
                         setattr(doc, k, v)
-                    # doc.data = data
                     doc.sign = sign
                     doc.signed_data = item.data
 
@@ -216,11 +215,10 @@ async def senddoc(item: DocumentRequest) -> SignedResponse:
                                           msg='Document was received earlier already',
                                           uuid=doc.uuid)
             else:
-                doc = Document(**dict(item,
-                                      # data=data,
-                                      sign=sign,
-                                      signed_data=item.data,
-                                      status=DocumentStatus.RECEIVED))
+                doc = Document(**dict(filter(lambda x: x[0] != 'data', item)),
+                               sign=sign,
+                               signed_data=item.data,
+                               status=DocumentStatus.RECEIVED)
                 ss.add(doc)
                 await ss.flush()
                 await ss.refresh(doc, with_for_update=True)
