@@ -1,17 +1,33 @@
 version: '3.4'
 
 services:
+  prepare:
+    image: priceplan/cadess:0.1
+    volumes:
+    - /opt/cades:/opt/cades
+    working_dir: /cades
+    restart: "no"
+    entrypoint: >
+      /bin/bash -c "python db.py &&
+        cp cades.yaml /opt/cades/cades.yaml"
+  
   cadess:
     container_name: cadess
-    image: cadess:0.1
-    ports:
-    - "443:8080"
+    image: priceplan/cadess:0.1
     volumes:
-    - '/opt/cades/cades.yaml:/cades/cades.yaml'
-    - '/opt/cades/cades.db:/cades/cades.db'
+      - type: bind
+        source: /opt/cades/cades.yaml
+        target: /cades/cades.yaml
+      - type: bind
+        source: /opt/cades/cades.db
+        target: /cades/cades.db
+    depends_on:
+      prepare:
+        condition: service_completed_successfully
+    network_mode: host
     working_dir: /cades
     environment:
-      CADES_PORT: 8080
+      CADES_PORT: 443
     entrypoint:
     - python
     - apisrv.py

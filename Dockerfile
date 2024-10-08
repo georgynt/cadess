@@ -54,6 +54,7 @@ RUN cd /tmp/arch && tar -xf linux-amd64_deb.tgz && \
 RUN dpkg -i /tmp/arch/linux-amd64_deb/cprocsp-pki-cades-64*.deb
 
 WORKDIR /cades
+
 COPY --from=builder /opt/cprocsp/lib/amd64/pycades.so /cades/pycades.so
 
 RUN /opt/cprocsp/sbin/amd64/cpconfig -license -set $LICENSE

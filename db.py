@@ -1,5 +1,4 @@
 from os.path import join
-from uuid import uuid4
 
 from sqlalchemy import BINARY, Column, DECIMAL, Date, DateTime, String, Uuid, create_engine, Enum, INT
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
@@ -64,6 +63,12 @@ class Document(Base):
         return f"<Document uuid={self.uuid} name={self.name} number={self.number} status={self.status}>"
 
 
-async def create_tables():
-    async with engine.begin() as cnx:
+async def create_tables(eng=engine):
+    async with eng.begin() as cnx:
         await cnx.run_sync(Base.metadata.create_all)
+
+if __name__ == '__main__':
+    import asyncio
+
+    alt_eng = create_async_engine(f"sqlite+aiosqlite:///{join('/opt/cades', 'cades.db')}")
+    asyncio.run(create_tables(alt_eng))
