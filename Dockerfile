@@ -57,7 +57,7 @@ WORKDIR /cades
 
 COPY --from=builder /opt/cprocsp/lib/amd64/pycades.so /cades/pycades.so
 
-RUN /opt/cprocsp/sbin/amd64/cpconfig -license -set $LICENSE
+RUN if [[ -n "$LICENSE" ]]; then /opt/cprocsp/sbin/amd64/cpconfig -license -set $LICENSE; fi
 
 COPY $PFX_FILE ./certs/signcert.pfx
 COPY $ROOT_PFX_FILE ./certs/rootcert.pfx
