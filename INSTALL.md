@@ -62,12 +62,63 @@ callbacks: # список URL для обратного вызова.
 - http://localhost/test
 - https://someserver/suffix
 ```
+см. [Пример файла конфигурации](#пример-файла-конфигурации)
 
-### описание некоторых параметров:
-секция `settings`:
-- `certificate-store`: полностью соответствует вариантам значений из перечисления [CAPICOM_STORE_LOCATION](https://learn.microsoft.com/ru-ru/windows/win32/seccrypto/capicom-store-location)
-- `fake-logic` - для продакшна можно не указывать этот параметр или указать `false`. Нужен для тестов (значение `true`).
-    в случае если указано значение `true`, подпись не выполняется и документ в ДИАДОК не отправляется
+
+## Linux docker container
+### Сборка
+
+#### 1. Сборка docker-образа
+
+Пример:
+```bash
+$ docker build . -t cadess:0.1 \
+  --build-arg LICENSE=<ID лицензии> \
+  --build-arg PFX_FILE=./path/to/sign-certificate.pfx \
+  --build-arg ROOT_PFX_FILE=./path/to/cacert.pfx \
+  --build-arg PINCODE=<pin устанавливаемый сертификату>
+```
+
+Если у вас есть лицензия КриптоПРО - укажите её через переменную `LICENSE`
+В переменную `PFX_FILE` нужно указать путь до сертификата, которым будут подписываться документы
+В переменную `ROOT_PFX_FILE` нужно указать путь до корневого сертификата
+`PINCODE` - пинкод для контейнера. Он будет установлен. Его же нужно указать в файле конфига cades.yaml
+Сертификаты будут помещены в контейнер и импотрированы в процессе сборки образа    
+
+#### 2. Запуск контейнера через docker-compose
+
+Пример:
+
+`$ docker-compose up`
+
+
+## Пример файла конфигурации
+```yaml
+diadoc:
+  client-id: <ключ ДИАДОК, выданный ООО Контур> 
+  login: <логин пользователя диадок>
+  password: <пароль пользователя диадок>
+  url: https://diadoc-api.kontur.ru
+settings:
+  certificate-store: <1|2|3|4 - код хранилища> 
+  certnumber: <SerialNumber сертификата, которым будет подписан документ>
+  fake-logic: <true|false - для тестов> 
+  pincode: <пин-код хранилища (HDIMAGE или аппаратного токена)>
+users:
+  <user>: <token> # Имя пользователя + токен
+whitelist: # Список IP адресов, которым можно обращаться к сервису
+- 127.0.0.1
+- 192.168.103.1
+callbacks: # список URL для обратного вызова.
+- http://localhost/test
+- https://someserver/suffix
+```
+
+### описание некоторых параметров конфига:
+- `settings`:
+  - `certificate-store`: полностью соответствует вариантам значений из перечисления [CAPICOM_STORE_LOCATION](https://learn.microsoft.com/ru-ru/windows/win32/seccrypto/capicom-store-location)
+  - `fake-logic` - для продакшна можно не указывать этот параметр или указать `false`. Нужен для тестов (значение `true`).
+      в случае если указано значение `true`, подпись не выполняется и документ в ДИАДОК не отправляется
 - `users.<user>:<token>` - нужен для авторизации в сервисе CasCades, передаётся в заголовке Authorization в виде: 
   `Cades <token>`
 - `callbacks` - по всем перечисленным URL будет вызван метод POST (с некоторыми полями структуры документа), если произошло изменение статуса документа
@@ -80,31 +131,3 @@ callbacks: # список URL для обратного вызова.
   "edo_status_descr": "Документооборот завершен"
 } 
 ```
-
-## Linux
-### Сборка
-
-#### 1. Сборка docker-образа
-
-    Пример:
-    ```bash
-    $ docker build . -t cadess:0.1 \
-      --build-arg LICENSE=<ID лицензии> \
-      --build-arg PFX_FILE=./path/to/sign-certificate.pfx \
-      --build-arg ROOT_PFX_FILE=./path/to/cacert.pfx \
-      --build-arg PINCODE=<pin устанавливаемый сертификату>
-    ```
-
-    Если у вас есть лицензия КриптоПРО - укажите её через переменную `LICENSE`
-    В переменную `PFX_FILE` нужно указать путь до сертификата, которым будут подписываться документы
-    В переменную `ROOT_PFX_FILE` нужно указать путь до корневого сертификата
-    `PINCODE` - пинкод для контейнера. Он будет установлен. Его же нужно указать в файле конфига cades.yaml
-    Сертификаты будут помещены в контейнер и импотрированы в процессе сборки образа    
-
-#### 2. Запуск контейнера через docker-compose
-
-    Пример:
-
-    `$ docker-compose up`
-
-    
