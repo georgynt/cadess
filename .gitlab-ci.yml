@@ -3,6 +3,9 @@ variables:
   HOSTS:
     description: "указать список хостов или группу, по умолчанию none"
     value: "none"
+  CADES_VERSION:
+    description: "указать версию контейнера"
+    value: "0.1"
 
 stages:
   - update
@@ -36,7 +39,7 @@ build docker:
         - export CERT_PASS=$(vault kv get -field=CERT_PASS gitlab/backoffice/ansible-infra/cryptopro5-docker)
         - trap 'vault token revoke $ANSIBLE_TOKEN' ERR        
         - cd /etc/ansible-infra/"$CI_PROJECT_NAME"/
-        - sudo -E docker build --build-arg LICENSE_CRYPTOPRO=$LICENSE_CRYPTOPRO --build-arg CERT_PASS=$CERT_PASS -t $CI_REGISTRY_IMAGE/cryptopro .   
+        - sudo -E docker build . -t $CI_REGISTRY_IMAGE/cadess:$CADES_VERSION  --build-arg LICENSE=$LICENSE_CRYPTOPRO --build-arg PFX_FILE=./certs/test3.pfx --build-arg ROOT_PFX_FILE=certs/cert3.crt --build-arg PINCODE=$CERT_PASS
         - sudo -E docker login -u "$CI_REGISTRY_USER" -p "$CI_JOB_TOKEN" "$CI_REGISTRY"
-        - sudo -E docker push $CI_REGISTRY_IMAGE/cryptopro
+        - sudo -E docker push $CI_REGISTRY_IMAGE/cadess:$CADES_VERSION
         - vault token revoke $ANSIBLE_TOKEN
