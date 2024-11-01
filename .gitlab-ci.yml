@@ -1,8 +1,5 @@
 ---
 variables:
-  HOSTS:
-    description: "указать список хостов или группу, по умолчанию none"
-    value: "none"
   CADES_VERSION:
     description: "указать версию контейнера"
     value: "0.1"
@@ -15,7 +12,6 @@ stages:
   - update
   - build
   - start
-
 
 
 update files:
