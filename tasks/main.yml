@@ -1,6 +1,11 @@
 ---
+- name: Get variables
+  local_action:
+    module: set_fact
+    DOCKER_IMAGE: "{{ lookup('ansible.builtin.env', 'DOCKER_IMAGE') }}"
+
 - debug:
-    msg: "ANS_HOSTS: {{ ANS_HOSTS }}, DOCKER_IMAGE: {{ DOCKER_IMAGE }}"
+    msg: "DOCKER_IMAGE: {{ DOCKER_IMAGE }}"
 
 - name: Pull Docker image
   community.docker.docker_image:
