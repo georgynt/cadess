@@ -16,13 +16,7 @@ stages:
   - build
   - start
 
-rules:
-  - if: '$CERT_OWNER == "star"'
-    variables:
-      CERT_OWNER_CERT: "./certs/star.pfx"
-  - if: '$CERT_OWNER == "test"'
-    variables:
-      CERT_OWNER_CERT: "./certs/test3.pfx"
+
 
 update files:
     stage: update
@@ -38,7 +32,15 @@ update files:
 build docker:
     stage: build
     tags:
-        - backoffice 
+        - backoffice
+    rules:
+      - if: '$CERT_OWNER == "star"'
+        variables:
+          CERT_OWNER_CERT: "./certs/star.pfx"
+      - if: '$CERT_OWNER == "test"'
+        variables:
+          CERT_OWNER_CERT: "./certs/test3.pfx"
+          CADES_VERSION: "${CADES_VERSION}.test"
     when: manual  
     script:
         - export PROJECT_PATH="$CI_PROJECT_PATH"
