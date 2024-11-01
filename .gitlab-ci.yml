@@ -6,12 +6,23 @@ variables:
   CADES_VERSION:
     description: "указать версию контейнера"
     value: "0.1"
+  CERT_OWNER:
+    description: "указать какой пробрасывать сертификат, по-умолчанию тестовый. Указать star, для сертификата Старовойтенко"
+    value: "test"
+
 
 stages:
   - update
   - build
   - start
 
+rules:
+  - if: '$CERT_OWNER == "star"'
+    variables:
+      CERT_OWNER_CERT: "./certs/star.pfx"
+  - if: '$CERT_OWNER == "test"'
+    variables:
+      CERT_OWNER_CERT: "./certs/test3.pfx"
 
 update files:
     stage: update
@@ -39,7 +50,7 @@ build docker:
         - export CERT_PASS=$(vault kv get -field=CERT_PASS gitlab/backoffice/ansible-infra/cryptopro5-docker)
         - trap 'vault token revoke $ANSIBLE_TOKEN' ERR        
         - cd /etc/ansible-infra/"$CI_PROJECT_NAME"/
-        - sudo -E docker build . -t $CI_REGISTRY_IMAGE/cadess:$CADES_VERSION  --build-arg LICENSE=$LICENSE_CRYPTOPRO --build-arg PFX_FILE=./certs/test3.pfx --build-arg ROOT_PFX_FILE=certs/cert3.crt --build-arg PINCODE=$CERT_PASS
+        - sudo -E docker build . -t $CI_REGISTRY_IMAGE/cadess:$CADES_VERSION  --build-arg LICENSE=$LICENSE_CRYPTOPRO --build-arg PFX_FILE=$CERT_OWNER_CERT --build-arg ROOT_PFX_FILE=certs/cert3.crt --build-arg PINCODE=$CERT_PASS
         - sudo -E docker login -u "$CI_REGISTRY_USER" -p "$CI_JOB_TOKEN" "$CI_REGISTRY"
         - sudo -E docker push $CI_REGISTRY_IMAGE/cadess:$CADES_VERSION
         - vault token revoke $ANSIBLE_TOKEN
