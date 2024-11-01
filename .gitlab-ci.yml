@@ -62,7 +62,6 @@ push container:
     tags:
         - backoffice
     rules:
-      - if: '$HOSTS != "none"'
       - if: '$HOSTS == "prod"'
         variables:
           ANS_HOSTS: "billing_web"
@@ -71,6 +70,7 @@ push container:
         variables:
           ANS_HOSTS: "billing_web_stage"
           DOCKER_IMAGE: "${CI_REGISTRY_IMAGE}/cadess:${CADES_VERSION}.test"
+      - if: '$HOSTS != "none"'
     script:
       - export ANS_HOSTS="$ANS_HOSTS"
       - export DOCKER_IMAGE="$DOCKER_IMAGE"
