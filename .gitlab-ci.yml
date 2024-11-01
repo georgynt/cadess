@@ -1,5 +1,8 @@
 ---
 variables:
+  HOSTS:
+    description: "Для заливки контейнера на хосты Биллинга указываем значение prod или stage"
+    value: "none"
   CADES_VERSION:
     description: "указать версию контейнера"
     value: "0.1"
@@ -11,7 +14,7 @@ variables:
 stages:
   - update
   - build
-  - start
+  - push
 
 
 update files:
@@ -33,7 +36,7 @@ build docker:
       - if: '$CERT_OWNER == "star"'
         variables:
           CERT_OWNER_CERT: "./certs/star.pfx"
-          CADES_VERSION_TAG: "${CADES_VERSION}"
+          CADES_VERSION_TAG: "${CADES_VERSION}.star"
       - if: '$CERT_OWNER == "test"'
         variables:
           CERT_OWNER_CERT: "./certs/test3.pfx"
@@ -53,3 +56,23 @@ build docker:
         - sudo -E docker login -u "$CI_REGISTRY_USER" -p "$CI_JOB_TOKEN" "$CI_REGISTRY"
         - sudo -E docker push $CI_REGISTRY_IMAGE/cadess:$CADES_VERSION_TAG
         - vault token revoke $ANSIBLE_TOKEN
+
+push container:
+    stage: push
+    tags:
+        - backoffice
+    rules:
+    - if: '$HOSTS != "none"'
+    - if: '$HOSTS == "prod"'
+      variables:
+          ANS_HOSTS: "billing_web"
+          DOCKER_IMAGE: "{$CI_REGISTRY_IMAGE/cadess:$CADES_VERSION_TAG}"
+    - if: '$HOSTS == "stage"'
+      variables:
+          ANS_HOSTS: "billing_web_stage"
+          DOCKER_IMAGE: "{$CI_REGISTRY_IMAGE/cadess:$CADES_VERSION_TAG}"
+    script:
+        
+        - cd /etc/ansible-infra/
+        - ansible-playbook docker-cades.yaml -l "$ANS_HOSTS" -e "DOCKER_IMAGE=$DOCKER_IMAGE"
+
