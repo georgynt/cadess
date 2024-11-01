@@ -33,10 +33,11 @@ build docker:
       - if: '$CERT_OWNER == "star"'
         variables:
           CERT_OWNER_CERT: "./certs/star.pfx"
+          CADES_VERSION_TAG: "${CADES_VERSION}"
       - if: '$CERT_OWNER == "test"'
         variables:
           CERT_OWNER_CERT: "./certs/test3.pfx"
-          CADES_VERSION: "${CADES_VERSION}.test"
+          CADES_VERSION_TAG: "${CADES_VERSION}.test"
     when: manual  
     script:
         - export PROJECT_PATH="$CI_PROJECT_PATH"
@@ -48,7 +49,7 @@ build docker:
         - export CERT_PASS=$(vault kv get -field=CERT_PASS gitlab/$PROJECT_PATH)
         - trap 'vault token revoke $ANSIBLE_TOKEN' ERR        
         - cd /etc/ansible-infra/"$CI_PROJECT_NAME"/
-        - sudo -E docker build . -t $CI_REGISTRY_IMAGE/cadess:$CADES_VERSION  --build-arg LICENSE=$LICENSE_CRYPTOPRO --build-arg PFX_FILE=$CERT_OWNER_CERT --build-arg ROOT_PFX_FILE=certs/cert3.crt --build-arg PINCODE=$CERT_PASS
+        - sudo -E docker build . -t $CI_REGISTRY_IMAGE/cadess:$CADES_VERSION_TAG  --build-arg LICENSE=$LICENSE_CRYPTOPRO --build-arg PFX_FILE=$CERT_OWNER_CERT --build-arg ROOT_PFX_FILE=certs/cert3.crt --build-arg PINCODE=$CERT_PASS
         - sudo -E docker login -u "$CI_REGISTRY_USER" -p "$CI_JOB_TOKEN" "$CI_REGISTRY"
-        - sudo -E docker push $CI_REGISTRY_IMAGE/cadess:$CADES_VERSION
+        - sudo -E docker push $CI_REGISTRY_IMAGE/cadess:$CADES_VERSION_TAG
         - vault token revoke $ANSIBLE_TOKEN
