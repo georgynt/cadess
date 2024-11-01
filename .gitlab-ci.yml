@@ -7,7 +7,7 @@ variables:
     description: "указать версию контейнера"
     value: "0.1"
   CERT_OWNER:
-    description: "указать какой пробрасывать сертификат, по-умолчанию тестовый. Указать star, для сертификата Старовойтенко"
+    description: "при сборке контейнера указать какой пробрасывать сертификат, по-умолчанию тестовый. Указать star, для сертификата Старовойтенко"
     value: "test"
 
 
@@ -66,11 +66,11 @@ push container:
     - if: '$HOSTS == "prod"'
       variables:
           ANS_HOSTS: "billing_web"
-          DOCKER_IMAGE: "{$CI_REGISTRY_IMAGE/cadess:$CADES_VERSION_TAG}"
+          DOCKER_IMAGE: "${CI_REGISTRY_IMAGE}/cadess:${CADES_VERSION}.star"
     - if: '$HOSTS == "stage"'
       variables:
           ANS_HOSTS: "billing_web_stage"
-          DOCKER_IMAGE: "{$CI_REGISTRY_IMAGE/cadess:$CADES_VERSION_TAG}"
+          DOCKER_IMAGE: "${CI_REGISTRY_IMAGE}/cadess:${CADES_VERSION}.test"
     script:
         
         - cd /etc/ansible-infra/
