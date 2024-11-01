@@ -1,45 +1,42 @@
-# This file is a template, and might need editing before it works on your project.
-# To contribute improvements to CI/CD templates, please follow the Development guide at:
-# https://docs.gitlab.com/ee/development/cicd/templates.html
-# This specific template is located at:
-# https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/templates/Getting-Started.gitlab-ci.yml
+---
+variables:
+  HOSTS:
+    description: "указать список хостов или группу, по умолчанию none"
+    value: "none"
 
-# This is a sample GitLab CI/CD configuration file that should run without any modifications.
-# It demonstrates a basic 3 stage CI/CD pipeline. Instead of real tests or scripts,
-# it uses echo commands to simulate the pipeline execution.
-#
-# A pipeline is composed of independent jobs that run scripts, grouped into stages.
-# Stages run in sequential order, but jobs within stages run in parallel.
-#
-# For more information, see: https://docs.gitlab.com/ee/ci/yaml/index.html#stages
-
-stages:          # List of stages for jobs, and their order of execution
+stages:
+  - update
   - build
-  - test
-  - deploy
+  - start
 
-build-job:       # This job runs in the build stage, which runs first.
-  stage: build
-  script:
-    - echo "Compiling the code..."
-    - echo "Compile complete."
 
-unit-test-job:   # This job runs in the test stage.
-  stage: test    # It only starts when the job in the build stage completes successfully.
-  script:
-    - echo "Running unit tests... This will take about 60 seconds."
-    - sleep 60
-    - echo "Code coverage is 90%"
+update files:
+    stage: update
+    tags:
+        - backoffice   
+    script:
+        
+        - cd /etc/ansible-infra/
+        - git clone https://"$DEPLOY_USER":"$DEPLOY_PASS"@gitlab.atol.tech/"$CI_PROJECT_PATH".git "$CI_PROJECT_NAME" || true
+        - cd "$CI_PROJECT_NAME"
+        - git pull
 
-lint-test-job:   # This job also runs in the test stage.
-  stage: test    # It can run at the same time as unit-test-job (in parallel).
-  script:
-    - echo "Linting code... This will take about 10 seconds."
-    - sleep 10
-    - echo "No lint issues found."
-
-deploy-job:      # This job runs in the deploy stage.
-  stage: deploy  # It only runs when *both* jobs in the test stage complete successfully.
-  script:
-    - echo "Deploying application..."
-    - echo "Application successfully deployed."
+build docker:
+    stage: build
+    tags:
+        - backoffice 
+    when: manual  
+    script:
+        - export PROJECT_PATH="$CI_PROJECT_PATH"
+        - echo $CI_PROJECT_PATH
+        - export VAULT_ADDR=https://vault.atol.ru
+        - export VAULT_TOKEN="$(vault write -field=token auth/jwt/login role=gitlab jwt=$CI_JOB_JWT_V2)"
+        - export ANSIBLE_TOKEN="$(vault token create -format=json -ttl=30m | jq -r ".auth.client_token")"
+        - export LICENSE_CRYPTOPRO=$(vault kv get -field=LICENSE_CRYPTOPRO gitlab/backoffice/ansible-infra/cryptopro5-docker)
+        - export CERT_PASS=$(vault kv get -field=CERT_PASS gitlab/backoffice/ansible-infra/cryptopro5-docker)
+        - trap 'vault token revoke $ANSIBLE_TOKEN' ERR        
+        - cd /etc/ansible-infra/"$CI_PROJECT_NAME"/
+        - sudo -E docker build --build-arg LICENSE_CRYPTOPRO=$LICENSE_CRYPTOPRO --build-arg CERT_PASS=$CERT_PASS -t $CI_REGISTRY_IMAGE/cryptopro .   
+        - sudo -E docker login -u "$CI_REGISTRY_USER" -p "$CI_JOB_TOKEN" "$CI_REGISTRY"
+        - sudo -E docker push $CI_REGISTRY_IMAGE/cryptopro
+        - vault token revoke $ANSIBLE_TOKEN
