@@ -1,0 +1,5 @@
+---
+- name: Pull Docker image
+  community.docker.docker_image:
+    name: "{{ DOCKER_IMAGE }}"
+    pull: yes
