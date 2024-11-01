@@ -50,8 +50,8 @@ ARG LICENSE
 ARG PFX_FILE
 ARG ROOT_PFX_FILE
 
-ENV LICENSE=$LICENSE_CRYPTOPRO \
-    PINCODE=$CERT_PASS
+ENV LICENSE=$LICENSE \
+    PINCODE=$PINCODE
 
 
 RUN apt-get update && apt-get install -y --no-install-recommends $PACKAGES
