@@ -36,3 +36,4 @@ wcwidth==0.2.13
 typing-inspect==0.9.0
 typing_extensions==4.12.2
 aiohttp==3.10.5
+asyncpg==0.30.0
