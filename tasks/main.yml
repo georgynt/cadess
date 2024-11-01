@@ -1,5 +1,8 @@
 ---
+- debug:
+    msg: "ANS_HOSTS: {{ ANS_HOSTS }}, DOCKER_IMAGE: {{ DOCKER_IMAGE }}"
+
 - name: Pull Docker image
   community.docker.docker_image:
     name: "{{ DOCKER_IMAGE }}"
-    pull: yes
+    state: present
