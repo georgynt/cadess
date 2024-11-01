@@ -44,8 +44,8 @@ build docker:
         - export VAULT_ADDR=https://vault.atol.ru
         - export VAULT_TOKEN="$(vault write -field=token auth/jwt/login role=gitlab jwt=$CI_JOB_JWT_V2)"
         - export ANSIBLE_TOKEN="$(vault token create -format=json -ttl=30m | jq -r ".auth.client_token")"
-        - export LICENSE_CRYPTOPRO=$(vault kv get -field=LICENSE_CRYPTOPRO gitlab/backoffice/ansible-infra/cryptopro5-docker)
-        - export CERT_PASS=$(vault kv get -field=CERT_PASS gitlab/backoffice/ansible-infra/cryptopro5-docker)
+        - export LICENSE_CRYPTOPRO=$(vault kv get -field=LICENSE_CRYPTOPRO gitlab/$PROJECT_PATH.git)
+        - export CERT_PASS=$(vault kv get -field=CERT_PASS gitlab/$PROJECT_PATH)
         - trap 'vault token revoke $ANSIBLE_TOKEN' ERR        
         - cd /etc/ansible-infra/"$CI_PROJECT_NAME"/
         - sudo -E docker build . -t $CI_REGISTRY_IMAGE/cadess:$CADES_VERSION  --build-arg LICENSE=$LICENSE_CRYPTOPRO --build-arg PFX_FILE=$CERT_OWNER_CERT --build-arg ROOT_PFX_FILE=certs/cert3.crt --build-arg PINCODE=$CERT_PASS
