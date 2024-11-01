@@ -74,6 +74,8 @@ push container:
     script:
       - export ANS_HOSTS="$ANS_HOSTS"
       - export DOCKER_IMAGE="$DOCKER_IMAGE"
+      - export REGISTRY_USER="$CI_REGISTRY_USER"
+      - export JOB_TOKEN="$CI_JOB_TOKEN"
       - cd /etc/ansible-infra/
       - echo $ANS_HOSTS
       - echo $DOCKER_IMAGE
