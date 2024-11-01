@@ -73,7 +73,7 @@ push container:
           DOCKER_IMAGE: "${CI_REGISTRY_IMAGE}/cadess:${CADES_VERSION}.test"
     script:
       - cd /etc/ansible-infra/
-      - echo "ANS_HOSTS: $ANS_HOSTS"
-      - echo "DOCKER_IMAGE: $DOCKER_IMAGE"
+      - echo $ANS_HOSTS
+      - echo $DOCKER_IMAGE
       - ansible-playbook docker-cades.yaml -l "$ANS_HOSTS" -e "DOCKER_IMAGE=$DOCKER_IMAGE"
 
