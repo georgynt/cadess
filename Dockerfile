@@ -2,6 +2,7 @@ FROM ubuntu:22.04 as builder
 
 ARG PACKAGES="python3.11 unzip python3-pip apt-transport-https ca-certificates sqlite3 pcscd libusb-1.0-0 libusb-0.1-4 udev"
 
+
 RUN echo $PACKAGES
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -37,10 +38,21 @@ FROM ubuntu:22.04
 
 ARG PACKAGES="python3.11 unzip python3-pip apt-transport-https ca-certificates sqlite3 pcscd libusb-1.0-0 libusb-0.1-4 udev"
 
+
+ENV TZ="Europe/Moscow" \
+    docker="1"
+
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
+    echo $TZ > /etc/timezone
+
 ARG PINCODE
 ARG LICENSE
 ARG PFX_FILE
 ARG ROOT_PFX_FILE
+
+ENV LICENSE=$LICENSE_CRYPTOPRO \
+    PINCODE=$CERT_PASS
+
 
 RUN apt-get update && apt-get install -y --no-install-recommends $PACKAGES
 
