@@ -22,7 +22,7 @@
 #    name: "{{ DOCKER_IMAGE }}"
 #    state: present
 - name: create docker-compose.yaml
-    template:
+  template:
       src: docker-compose.yaml.j2
       dest: /opt/cades/docker-compose.yaml
 
