@@ -1,4 +1,7 @@
 #from asyncio import Lock
+from os.path import join
+from urllib.parse import urlsplit
+
 from time import sleep
 
 import yaml, sys, os
@@ -7,6 +10,7 @@ from watchdog.events import FileModifiedEvent, FileSystemEvent, FileSystemEventH
 
 from logger import logger
 from singleton import Singleton
+from tools import get_installation_dir
 
 
 def workon_win() -> bool:
@@ -32,7 +36,8 @@ default_config_object = {
         "login": None,
         "password": None
     },
-    "callbacks": None
+    "callbacks": None,
+    "db-connection-string": f"sqlite+aiosqlite:///{join(get_installation_dir(), 'cades.db')}"
 }
 
 
@@ -153,6 +158,15 @@ class Config(FileSystemEventHandler, metaclass=Singleton):
     @property
     def callback_urls(self) -> list[str]:
         return self._data.get('callbacks', []) or []
+
+    @property
+    def dbscheme(self) -> str:
+        sr = urlsplit(self.dbcnxstr)
+        return sr.scheme
+
+    @property
+    def dbcnxstr(self) -> str:
+        return self._data.get('db-connection-string', f"sqlite+aiosqlite:///{join(get_installation_dir(), 'cades.db')}")
 
 if __name__ == '__main__':
     try:

@@ -1,6 +1,6 @@
 FROM ubuntu:22.04 as builder
 
-ARG PACKAGES="python3.11 unzip python3-pip apt-transport-https ca-certificates sqlite3 pcscd libusb-1.0-0 libusb-0.1-4 udev"
+ARG PACKAGES="python3.11 unzip python3-pip apt-transport-https ca-certificates sqlite3 pcscd libusb-1.0-0 libusb-0.1-4 udev postgresql-client postgresql-common"
 
 
 RUN echo $PACKAGES
@@ -36,7 +36,7 @@ RUN ln -s /opt/cprocsp/lib/amd64/pycades.so /cades/pycades.so
 
 FROM ubuntu:22.04
 
-ARG PACKAGES="python3.11 unzip python3-pip apt-transport-https ca-certificates sqlite3 pcscd libusb-1.0-0 libusb-0.1-4 udev"
+ARG PACKAGES="python3.11 unzip python3-pip apt-transport-https ca-certificates sqlite3 pcscd libusb-1.0-0 libusb-0.1-4 udev postgresql-client postgresql-common"
 
 
 ENV TZ="Europe/Moscow" \

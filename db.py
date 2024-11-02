@@ -1,22 +1,23 @@
-from os.path import join
-
-from sqlalchemy import BINARY, Column, DECIMAL, Date, DateTime, String, Uuid, create_engine, Enum, INT
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from sqlalchemy import (BINARY, Column, DECIMAL, Date, DateTime, NullPool, QueuePool, String, Uuid, create_engine, Enum,
+                        INT)
+from sqlalchemy.dialects.postgresql import BYTEA
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import declarative_base
 
+from config import Config
 from const import DocumentStatus
-from tools import get_installation_dir
 
-
-DB_URL = f"sqlite+aiosqlite:///{join(get_installation_dir(), 'cades.db')}"
-# DB_URL
-# DB_URL = f"sqlite:///cades.db"
-
-engine = create_async_engine(DB_URL)
-Session = async_sessionmaker(engine, expire_on_commit=True)
+cfg = Config()
 
 Base = declarative_base()
 
+if 'postgre' in cfg.dbscheme or 'pg' in cfg.dbscheme:
+    BINARY = BYTEA
+    engine = create_async_engine(cfg.dbcnxstr, future=True, echo=True, poolclass=NullPool)
+    Session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+else:
+    engine = create_async_engine(cfg.dbcnxstr)
+    Session = async_sessionmaker(engine, expire_on_commit=True)
 
 class Document(Base):
     __tablename__ = 'documents'
@@ -70,5 +71,7 @@ async def create_tables(eng=engine):
 if __name__ == '__main__':
     import asyncio
 
-    alt_eng = create_async_engine(f"sqlite+aiosqlite:///{join('/opt/cades', 'cades.db')}")
+    # alt_eng = create_async_engine(f"sqlite+aiosqlite:///{join('/opt/cades', 'cades.db')}")
+    # alt_eng = create_async_engine(f"postgresql+asyncpg://cades:cades@localhost:5432/cades")
+    alt_eng = create_async_engine(cfg.dbcnxstr)
     asyncio.run(create_tables(alt_eng))

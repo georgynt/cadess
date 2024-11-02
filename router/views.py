@@ -227,7 +227,6 @@ async def senddoc(item: DocumentRequest) -> SignedResponse:
 
                 ss.add(doc)
                 await ss.commit()
-                # await ss.refresh(doc, ['uuid'])
 
                 logger.info(f"Document {item.name} № {item.number} signed and sent to upstream")
 
@@ -235,7 +234,6 @@ async def senddoc(item: DocumentRequest) -> SignedResponse:
         logger.error(f"Document {item.uuid} has errors: {str(e)}")
         raise HTTPException(422, str(e))
 
-    # logger.info(f"Document {doc.uuid} signed and queued for send")
     return SignedResponse(status=ServiceStatus.OK,
                           msg='Document signed and sent to upstream',
                           uuid=item.uuid)
