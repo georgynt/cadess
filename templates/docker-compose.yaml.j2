@@ -14,9 +14,10 @@ services:
 #        target: /certs
     working_dir: /cades
     environment:
-      CADES_PORT: 443
+      CADES_PORT: 444
+    network_mode: "host"
     entrypoint:
     - python
     - apisrv.py
-    ports:
-    - 9443:443
+ #   ports:
+ #   - 9443:443
