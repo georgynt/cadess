@@ -1,0 +1,22 @@
+services:
+  cadess:
+    container_name: cadess
+    image: {{ DOCKER_IMAGE }}
+    volumes:
+      - type: bind
+        source: /opt/cades/cades.yaml
+        target: /cades/cades.yaml
+#      - type: bind
+#        source: /opt/cades/cades.db
+#        target: /cades/cades.db
+#      - type: bind
+#        source: /opt/cades/certs
+#        target: /certs
+    working_dir: /cades
+    environment:
+      CADES_PORT: 443
+    entrypoint:
+    - python
+    - apisrv.py
+    ports:
+    - 9443:443
