@@ -65,11 +65,11 @@ push container:
       - if: '$HOSTS == "prod"'
         variables:
           ANS_HOSTS: "billing_web"
-          DOCKER_IMAGE: "${CI_REGISTRY_IMAGE}/cadess:${CADES_VERSION}.star"
+          DOCKER_IMAGE: "${CI_REGISTRY_IMAGE}/pp-cadess:${CADES_VERSION}.star"
       - if: '$HOSTS == "stage"'
         variables:
           ANS_HOSTS: "billing_web_stage"
-          DOCKER_IMAGE: "${CI_REGISTRY_IMAGE}/cadess:${CADES_VERSION}.test"
+          DOCKER_IMAGE: "${CI_REGISTRY_IMAGE}/pp-cadess:${CADES_VERSION}.test"
       - if: '$HOSTS != "none"'
     script:
       - export ANS_HOSTS="$ANS_HOSTS"
