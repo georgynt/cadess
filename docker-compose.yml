@@ -18,9 +18,9 @@ services:
       - type: bind
         source: /opt/cades/cades.yaml
         target: /cades/cades.yaml
-      - type: bind
-        source: /opt/cades/cades.db
-        target: /cades/cades.db
+#      - type: bind
+#        source: /opt/cades/cades.db
+#        target: /cades/cades.db
 #      - type: bind
 #        source: /opt/cades/certs
 #        target: /certs
