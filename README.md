@@ -11,6 +11,10 @@ https://gitlab.atol.tech/backoffice/ansible-infra/billing-cades-docker/-/pipelin
 
 2. Для деплоя и запуска контейнера, указать переменную hosts: для прода - prod, для стейджа - stage
 
+
+----
+
+
 [Инструкция по сборке и установке](INSTALL.md)
 
 Описание методов API можно посмотреть по ссылке: 
