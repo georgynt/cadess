@@ -107,7 +107,7 @@ if sys.platform == 'win32':
         @property
         def default_cert(self) -> CDispatch:
             if not hasattr(self,'_def_cert'):
-                self._def_cert = next(self.find_cert())
+                self._def_cert = next(self.find_cert(self.conf.certnumber))
             logger.info(f'Using default cert {self._def_cert.SerialNumber}')
             return self._def_cert
 
@@ -188,7 +188,7 @@ elif sys.platform == 'linux':
         @property
         def default_cert(self) -> Certificate:
             if not hasattr(self,'_def_cert'):
-                self._def_cert = next(self.find_cert())
+                self._def_cert = next(self.find_cert(self.conf.certnumber))
             logger.info(f'Using default cert {self._def_cert.SerialNumber}')
             return self._def_cert
 

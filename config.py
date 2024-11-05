@@ -94,7 +94,7 @@ class Config(FileSystemEventHandler, metaclass=Singleton):
 
     @property
     def settings(self) -> dict:
-        return self._data['settings'] or {}
+        return self._data.get('settings') or {}
 
     @property
     def auth_disabled(self) -> bool:
@@ -167,6 +167,10 @@ class Config(FileSystemEventHandler, metaclass=Singleton):
     @property
     def dbcnxstr(self) -> str:
         return self._data.get('db-connection-string', f"sqlite+aiosqlite:///{join(get_installation_dir(), 'cades.db')}")
+
+    @property
+    def certnumber(self) -> str:
+        return self.settings.get("certnumber", None)
 
 if __name__ == '__main__':
     try:
