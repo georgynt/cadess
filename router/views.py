@@ -1,7 +1,3 @@
-import sys
-from base64 import b64decode
-import base64
-
 from fastapi import HTTPException
 from fastapi.routing import APIRouter
 from sqlalchemy import select
@@ -11,6 +7,7 @@ from config import Config
 from const import DocumentStatusRus
 from db import Document, Session
 from diadoc.connector import AuthdDiadocAPI, DiadocAPI
+from diadoc.enums import CounteragentStatus
 from logic import Logic, LogicMock
 from router.types import *
 from sender import send_document
@@ -74,33 +71,7 @@ async def diadoc() -> Status:
         return Status(code=1, name=DiadocServiceStatus.OK)
     else:
         raise HTTPException(404, "DIADOC service is not available")
-#
-#
-# @router.get('/client-id', tags=['client-id'])
-# async def client_id() -> dict[str, str]:
-#     config = Config()
-#     return {"value": config.client_id or ""}
-#
-#
-# @router.post('/client-id', tags=['client-id'])
-# async def client_id(data: dict[str, str]) -> str:
-#     config = Config()
-#     config.client_id = data.get('value', config.client_id)
-#     return "OK"
-#
-#
-# @router.get('/diadoc-url', tags=['diadoc-url'])
-# async def diadoc_url() -> dict[str, str]:
-#     config = Config()
-#     return {"url": config.diadoc_url or ""}
-#
-#
-# @router.post('/diadoc-url', tags=['diadoc-url'])
-# async def diadoc_url(data: dict[str, str]) -> str:
-#     config = Config()
-#     config.diadoc_url = data.get('url', config.diadoc_url)
-#     return "OK"
-#
+
 
 def get_msg(doc: Document) -> str:
     match doc.status:
@@ -237,3 +208,32 @@ async def senddoc(item: DocumentRequest) -> SignedResponse:
     return SignedResponse(status=ServiceStatus.OK,
                           msg='Document signed and sent to upstream',
                           uuid=item.uuid)
+
+
+@router.get("/check-relationship", tags=['contragents'])
+async def check_relationship(srcboxid: str|UUID, dstboxid: str|UUID) -> RelationStatus:
+    """Получить статус клиента, может ли он участвовать в ЭДО"""
+    dd = AuthdDiadocAPI()
+    ctg = await dd.aget_ctg(srcboxid, dstboxid)
+
+    return RelationStatus(srcboxid=srcboxid,
+                          dstboxid=dstboxid,
+                          status=ctg.CurrentStatus,
+                          established=ctg.CurrentStatus == CounteragentStatus.IsMyCounteragent)
+
+
+@router.get("/connected-contragents", tags=['contragents'])
+async def connected_contragents(srcboxid: str|UUID) -> list[Contragent]:
+    """Получить статусы клиентов"""
+    dd = AuthdDiadocAPI()
+    if isinstance(ctgs := await dd.aget_ctgs(srcboxid), list):
+        return [
+            Contragent(inn=c.Organization.Inn,
+                       kpp=c.Organization.Kpp,
+                       boxid=[b.BoxIdGuid for b in c.Organization.Boxes],
+                       name=c.Organization.FullName)
+                for c in ctgs
+        ]
+    elif isinstance(ctgs, str):
+        return []
+

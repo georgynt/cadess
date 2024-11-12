@@ -141,7 +141,7 @@ class DiadocAPI:
     def get_ctgs(self, box: UUID,
                  ctg_status: str|None = None,
                  aindex_key: str|None = None,
-                 query: str|None = None) -> list|str:
+                 query: str|None = None) -> list[Counteragent]|str:
         params = {'myBoxId': str(box)}
         if ctg_status:
             params['counteragentStatus'] = ctg_status
@@ -154,6 +154,13 @@ class DiadocAPI:
         if res.status_code in SUCCESS_CODES:
             return CounteragentList.parse_raw(res.content).Counteragents
         return res.content.decode()
+
+    async def aget_ctgs(self, box: UUID,
+                        ctg_status: str|None=None,
+                        aindex_key: str|None=None,
+                        query: str|None=None) -> list[Counteragent]|str:
+        """Получить список КА, с которыми установлены отношения ЭДО"""
+        return await asyncio.to_thread(self.get_ctgs, box, ctg_status, aindex_key, query)
 
     def post_message(self,
                      msg: MessageToPost,
@@ -202,6 +209,9 @@ class DiadocAPI:
         if res.status_code in SUCCESS_CODES:
             return Counteragent.parse_raw(res.content)
         return res.content.decode()
+
+    async def aget_ctg(self, myBoxId: UUID, counteragentBoxId: UUID) -> Counteragent|str:
+        return await asyncio.to_thread(self.get_ctg, myBoxId, counteragentBoxId)
 
     def get_message(self, boxId: UUID, messageId: UUID, entityId: UUID|None = None) -> dict|str:
         res = self.sess.get("/V5/GetMessage",

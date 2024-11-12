@@ -58,3 +58,17 @@ class DocsStatusRequest(BaseModel):
 class DocumentStatusRef(BaseModel):
     status: DocumentStatus
     descr: str
+
+
+class RelationStatus(BaseModel):
+    srcboxid: str
+    dstboxid: str
+    status: str
+    established: bool
+
+
+class Contragent(BaseModel):
+    inn: str
+    kpp: str
+    boxid: list[UUID|str]
+    name: str

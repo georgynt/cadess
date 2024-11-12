@@ -19,22 +19,20 @@ from diadoc.struct import (Counteragent, DocumentAttachment, DocumentV3, Message
 
 
 async def run_callbacks(doc: Document):
-    # if odoc.status != ndoc.status or odoc.diadoc_status != ndoc.diadoc_status:
-    if True:
-        try:
-            conf = Config()
+    try:
+        conf = Config()
 
-            async with aiohttp.ClientSession() as ss:
-                for clbk in conf.callback_urls:
-                    async with ss.post(clbk,
-                                       json={"uuid"            : str(doc.uuid),
-                                             "status"          : str(doc.status),
-                                             "edo_status"      : doc.diadoc_status,
-                                             "edo_status_descr": doc.diadoc_status_descr},
-                                       ssl=False) as rsl:
-                        print(rsl)
-        except Exception as e:
-            logger.error(str(e))
+        async with aiohttp.ClientSession() as ss:
+            for clbk in conf.callback_urls:
+                async with ss.post(clbk,
+                                   json={"uuid"            : str(doc.uuid),
+                                         "status"          : str(doc.status),
+                                         "edo_status"      : doc.diadoc_status,
+                                         "edo_status_descr": doc.diadoc_status_descr},
+                                   ssl=False) as rsl:
+                    logger.debug(f"callback {clbk} is called for doc={str(doc.uuid)}")
+    except Exception as e:
+        logger.error(f"error while executing callback: {str(e)}")
 
 
 async def send_document(doc: Document) -> bool:
