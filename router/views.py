@@ -162,13 +162,14 @@ async def senddoc(item: DocumentRequest) -> SignedResponse:
 
         async with Session() as ss:
 
-            docs = (await ss.execute(select(Document).where(Document.uuid == item.uuid).with_for_update(skip_locked=True))).scalars()
+            docs = (await ss.execute(
+                select(Document).where(Document.uuid == item.uuid).with_for_update(skip_locked=True))).scalars()
 
             for doc in docs:
                 if doc.status == DocumentStatus.FAIL:
                     doc.status = DocumentStatus.PROGRESS
-                    for k,v in dict(item).items():
-                        if k in ['uuid','data']: continue
+                    for k, v in dict(item).items():
+                        if k in ['uuid', 'data']: continue
                         setattr(doc, k, v)
                     doc.sign = sign
                     doc.signed_data = item.data
@@ -222,6 +223,21 @@ async def check_relationship(srcboxid: str|UUID, dstboxid: str|UUID) -> Relation
                           established=ctg.CurrentStatus == CounteragentStatus.IsMyCounteragent)
 
 
+@router.get("/check-relationship-inn-kpp", tags=['contragents'])
+async def check_relationship_inn_kpp(srcboxid: str|UUID, inn: str, kpp: str) -> RelationStatus:
+    """Получить статус клиента по ИНН + КПП"""
+    dd = AuthdDiadocAPI()
+    if len(orgs := await dd.aget_orgs_by_innkpp(inn, kpp)):
+        org = orgs[0]
+        box = org.Boxes[0]
+        if boxid := box.get('BoxIdGuid'):
+            ctg = await dd.aget_ctg(srcboxid, boxid)
+            return RelationStatus(srcboxid=srcboxid,
+                                  dstboxid=boxid,
+                                  status=ctg.CurrentStatus,
+                                  established=ctg.CurrentStatus == CounteragentStatus.IsMyCounteragent)
+
+
 @router.get("/connected-contragents", tags=['contragents'])
 async def connected_contragents(srcboxid: str|UUID) -> list[Contragent]:
     """Получить статусы клиентов"""
@@ -231,9 +247,10 @@ async def connected_contragents(srcboxid: str|UUID) -> list[Contragent]:
             Contragent(inn=c.Organization.Inn,
                        kpp=c.Organization.Kpp,
                        boxid=[b.BoxIdGuid for b in c.Organization.Boxes],
-                       name=c.Organization.FullName)
-                for c in ctgs
+                       name=c.Organization.FullName,
+                       status=c.CurrentStatus,
+                       established=c.CurrentStatus == CounteragentStatus.IsMyCounteragent)
+            for c in ctgs
         ]
     elif isinstance(ctgs, str):
         return []
-

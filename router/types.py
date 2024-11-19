@@ -72,3 +72,5 @@ class Contragent(BaseModel):
     kpp: str
     boxid: list[UUID|str]
     name: str
+    status: str
+    established: bool

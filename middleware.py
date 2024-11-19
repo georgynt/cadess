@@ -58,6 +58,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
                     return await call_next(request)
 
         return Response("NOT AUTHORIZED!", status_code=403)
+        # return await call_next(request)
 
 
 middleware = [

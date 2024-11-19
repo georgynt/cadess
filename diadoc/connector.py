@@ -200,6 +200,9 @@ class DiadocAPI:
             return OrganizationList.parse_raw(res.content).Organizations
         return []
 
+    async def aget_orgs_by_innkpp(self, inn: str|None=None, kpp: str|None=None) -> list[Organization]:
+        return await asyncio.to_thread(self.get_orgs_by_innkpp(inn, kpp))
+
     def get_ctg(self, myBoxId: UUID, counteragentBoxId: UUID) -> Counteragent|str:
         res = self.sess.get("/V3/GetCounteragent",
                             params={
