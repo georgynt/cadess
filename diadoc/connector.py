@@ -201,9 +201,9 @@ class DiadocAPI:
         return []
 
     async def aget_orgs_by_innkpp(self, inn: str|None=None, kpp: str|None=None) -> list[Organization]:
-        return await asyncio.to_thread(self.get_orgs_by_innkpp(inn, kpp))
+        return await asyncio.to_thread(self.get_orgs_by_innkpp, inn, kpp)
 
-    def get_ctg(self, myBoxId: UUID, counteragentBoxId: UUID) -> Counteragent|str:
+    def get_ctg(self, myBoxId: UUID, counteragentBoxId: UUID|str) -> Counteragent|str:
         res = self.sess.get("/V3/GetCounteragent",
                             params={
                                 'myBoxId'          : str(myBoxId),
@@ -213,7 +213,7 @@ class DiadocAPI:
             return Counteragent.parse_raw(res.content)
         return res.content.decode()
 
-    async def aget_ctg(self, myBoxId: UUID, counteragentBoxId: UUID) -> Counteragent|str:
+    async def aget_ctg(self, myBoxId: UUID, counteragentBoxId: UUID|str) -> Counteragent|str:
         return await asyncio.to_thread(self.get_ctg, myBoxId, counteragentBoxId)
 
     def get_message(self, boxId: UUID, messageId: UUID, entityId: UUID|None = None) -> dict|str:

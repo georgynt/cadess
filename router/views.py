@@ -230,8 +230,14 @@ async def check_relationship_inn_kpp(srcboxid: str|UUID, inn: str, kpp: str) -> 
     if len(orgs := await dd.aget_orgs_by_innkpp(inn, kpp)):
         org = orgs[0]
         box = org.Boxes[0]
-        if boxid := box.get('BoxIdGuid'):
-            ctg = await dd.aget_ctg(srcboxid, boxid)
+        if boxid := box.BoxIdGuid:
+            if isinstance(ctg := await dd.aget_ctg(srcboxid, boxid), str):
+                return RelationStatus(
+                    srcboxid=srcboxid,
+                    dstboxid=boxid,
+                    status=CounteragentStatus.NotInCounteragentList,
+                    established=False
+                )
             return RelationStatus(srcboxid=srcboxid,
                                   dstboxid=boxid,
                                   status=ctg.CurrentStatus,
