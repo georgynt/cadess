@@ -1,7 +1,7 @@
 ---
 variables:
   HOSTS:
-    description: "Для заливки контейнера на хосты Биллинга указываем значение prod или stage"
+    description: "Для заливки контейнера на хосты Биллинга указываем значение prod или stage или srvt-dc1-app34"
     value: "none"
   CADES_VERSION:
     description: "указать версию контейнера"
