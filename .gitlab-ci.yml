@@ -1,7 +1,7 @@
 ---
 variables:
   HOSTS:
-    description: "Для заливки контейнера на хосты Биллинга указываем значение prod или stage или srvt-dc1-app34"
+    description: "Для заливки контейнера на хосты Биллинга указываем значение prod или stage или dev"
     value: "none"
   CADES_VERSION:
     description: "указать версию контейнера"
@@ -70,9 +70,9 @@ push container:
         variables:
           ANS_HOSTS: "billing_web_stage"
           DOCKER_IMAGE: "${CI_REGISTRY_IMAGE}/pp-cadess:${CADES_VERSION}.test"
-      - if: '$HOSTS == "srvt-dc1-app34"'
+      - if: '$HOSTS == "dev"'
         variables:
-          ANS_HOSTS: "srvt-dc1-app34"
+          ANS_HOSTS: "billing_dev"
           DOCKER_IMAGE: "${CI_REGISTRY_IMAGE}/pp-cadess:${CADES_VERSION}.test"
 #      - if: '$HOSTS != "none"'
     script:
