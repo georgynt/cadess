@@ -1,3 +1,5 @@
+from os.path import exists
+
 from fastapi import HTTPException
 from fastapi.routing import APIRouter
 from sqlalchemy import select
@@ -268,3 +270,14 @@ async def connected_contragents(srcboxid: str|UUID) -> list[Contragent]:
         ]
     elif isinstance(ctgs, str):
         return []
+
+
+@router.get('/version', tags=['version'])
+async def version() -> str:
+    """Отдать версию из файлика. Если файлика нет - отдать 0.1"""
+    if exists("VERSION"):
+        with open("VERSION", 'r') as f:
+            ver = f.read()
+            return ver
+    else:
+        return "0.1"
