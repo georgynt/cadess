@@ -13,7 +13,7 @@ from diadoc.enums import CounteragentStatus
 from logic import Logic, LogicMock
 from router.types import *
 from sender import send_document
-
+from apisrv import VERSION
 
 __cades = None
 
@@ -273,11 +273,6 @@ async def connected_contragents(srcboxid: str|UUID) -> list[Contragent]:
 
 
 @router.get('/version', tags=['version'])
-async def version() -> str:
+async def version() -> bytes:
     """Отдать версию из файлика. Если файлика нет - отдать 0.1"""
-    if exists("VERSION"):
-        with open("VERSION", 'r') as f:
-            ver = f.read()
-            return ver
-    else:
-        return "0.1"
+    return VERSION.encode()
