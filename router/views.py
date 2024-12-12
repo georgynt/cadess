@@ -1,3 +1,4 @@
+import traceback
 from os.path import exists
 
 from fastapi import HTTPException
@@ -204,7 +205,7 @@ async def senddoc(item: DocumentRequest) -> SignedResponse:
                 logger.info(f"Document {item.name} № {item.number} signed and sent to upstream")
 
     except Exception as e:
-        logger.error(f"Document {item.uuid} has errors: {str(e)}")
+        logger.error(f"Document {item.uuid} has errors: {str(e)}\n{traceback.format_exc()}")
         raise HTTPException(422, str(e))
 
     return SignedResponse(status=ServiceStatus.OK,
