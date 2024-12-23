@@ -39,7 +39,7 @@ build docker:
           CADES_VERSION_TAG: "${CADES_VERSION}.star"
       - if: '$CERT_OWNER == "test"'
         variables:
-          CERT_OWNER_CERT: "./certs/test3.pfx"
+          CERT_OWNER_CERT: "./certs/test2.pfx"
           CADES_VERSION_TAG: "${CADES_VERSION}.test"
     when: manual  
     script:
