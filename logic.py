@@ -29,6 +29,9 @@ SIGNER = "CAdESCOM.CPSigner"
 SIGNED_DATA = "CAdESCOM.CadesSignedData"
 
 
+class NoAvailableCertificateException(Exception): ...
+
+
 class LogicAbstract(metaclass=ABCMeta):
     @property
     @abstractmethod
@@ -188,7 +191,10 @@ elif sys.platform == 'linux':
         @property
         def default_cert(self) -> Certificate:
             if not hasattr(self,'_def_cert'):
-                self._def_cert = next(self.find_cert(self.conf.certnumber))
+                try:
+                    self._def_cert = next(self.find_cert(self.conf.certnumber))
+                except StopIteration as e:
+                    raise NoAvailableCertificateException("No available certificate")
             logger.info(f'Using default cert {self._def_cert.SerialNumber}')
             return self._def_cert
 

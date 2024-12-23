@@ -11,7 +11,7 @@ from const import DocumentStatusRus
 from db import Document, Session
 from diadoc.connector import AuthdDiadocAPI, DiadocAPI
 from diadoc.enums import CounteragentStatus
-from logic import Logic, LogicMock
+from logic import Logic, LogicMock, NoAvailableCertificateException
 from router.types import *
 from sender import send_document
 
@@ -63,14 +63,29 @@ async def set_default_key(number: str) -> str:
 
 @router.get("/status", tags=['status'])
 async def status() -> Status:
-    return Status(code=1, name=ServiceStatus.OK)
+    from apisrv import VERSION
+
+    try:
+        cades = CadesLogic()
+        dt = cades.default_cert.ValidToDate
+        subj = cades.default_cert.SubjectName
+
+        return Status(code=1,
+                      name=ServiceStatus.OK,
+                      version=VERSION,
+                      subject_name=subj,
+                      valid_to=dt)
+    except NoAvailableCertificateException as e:
+        return Status(code=-2,
+                      name=ServiceStatus.NO_KEYS)
 
 
 @router.get("/diadoc", tags=['diadoc'])
 async def diadoc() -> Status:
     dd = AuthdDiadocAPI()
     if dd.authenticate():
-        return Status(code=1, name=DiadocServiceStatus.OK)
+        return Status(code=1,
+                      name=DiadocServiceStatus.OK)
     else:
         raise HTTPException(404, "DIADOC service is not available")
 

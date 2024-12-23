@@ -21,6 +21,9 @@ class Cert(BaseModel):
 class Status(BaseModel):
     code: int
     name: ServiceStatus|DiadocServiceStatus
+    version: str|None = None
+    subject_name: str|None = None
+    valid_to: str|date|None = None
 
 
 class DocumentRequest(BaseModel):
