@@ -241,7 +241,7 @@ async def check_relationship(srcboxid: str|UUID, dstboxid: str|UUID) -> Relation
 
 
 @router.get("/check-relationship-inn-kpp", tags=['contragents'])
-async def check_relationship_inn_kpp(srcboxid: str|UUID, inn: str, kpp: str|None) -> RelationStatus|MsgResponse:
+async def check_relationship_inn_kpp(srcboxid: str|UUID, inn: str, kpp: str|None = None) -> RelationStatus|MsgResponse:
     """Получить статус клиента по ИНН + КПП"""
 
     try:
