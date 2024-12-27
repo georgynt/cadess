@@ -1,3 +1,6 @@
+import traceback
+from os.path import exists
+
 from fastapi import HTTPException
 from fastapi.routing import APIRouter
 from sqlalchemy import select
@@ -8,10 +11,9 @@ from const import DocumentStatusRus
 from db import Document, Session
 from diadoc.connector import AuthdDiadocAPI, DiadocAPI
 from diadoc.enums import CounteragentStatus
-from logic import Logic, LogicMock
+from logic import Logic, LogicMock, NoAvailableCertificateException
 from router.types import *
 from sender import send_document
-
 
 __cades = None
 
@@ -61,14 +63,29 @@ async def set_default_key(number: str) -> str:
 
 @router.get("/status", tags=['status'])
 async def status() -> Status:
-    return Status(code=1, name=ServiceStatus.OK)
+    from apisrv import VERSION
+
+    try:
+        cades = CadesLogic()
+        dt = cades.default_cert.ValidToDate
+        subj = cades.default_cert.SubjectName
+
+        return Status(code=1,
+                      name=ServiceStatus.OK,
+                      version=VERSION,
+                      subject_name=subj,
+                      valid_to=dt)
+    except NoAvailableCertificateException as e:
+        return Status(code=-2,
+                      name=ServiceStatus.NO_KEYS)
 
 
 @router.get("/diadoc", tags=['diadoc'])
 async def diadoc() -> Status:
     dd = AuthdDiadocAPI()
     if dd.authenticate():
-        return Status(code=1, name=DiadocServiceStatus.OK)
+        return Status(code=1,
+                      name=DiadocServiceStatus.OK)
     else:
         raise HTTPException(404, "DIADOC service is not available")
 
@@ -203,7 +220,7 @@ async def senddoc(item: DocumentRequest) -> SignedResponse:
                 logger.info(f"Document {item.name} № {item.number} signed and sent to upstream")
 
     except Exception as e:
-        logger.error(f"Document {item.uuid} has errors: {str(e)}")
+        logger.error(f"Document {item.uuid} has errors: {str(e)}\n{traceback.format_exc()}")
         raise HTTPException(422, str(e))
 
     return SignedResponse(status=ServiceStatus.OK,
@@ -224,7 +241,7 @@ async def check_relationship(srcboxid: str|UUID, dstboxid: str|UUID) -> Relation
 
 
 @router.get("/check-relationship-inn-kpp", tags=['contragents'])
-async def check_relationship_inn_kpp(srcboxid: str|UUID, inn: str, kpp: str|None) -> RelationStatus|MsgResponse:
+async def check_relationship_inn_kpp(srcboxid: str|UUID, inn: str, kpp: str|None = None) -> RelationStatus|MsgResponse:
     """Получить статус клиента по ИНН + КПП"""
 
     try:
@@ -268,3 +285,11 @@ async def connected_contragents(srcboxid: str|UUID) -> list[Contragent]:
         ]
     elif isinstance(ctgs, str):
         return []
+
+
+@router.get('/version', tags=['version'])
+async def version() -> bytes:
+    """Отдать версию из файлика. Если файлика нет - отдать 0.1"""
+    from apisrv import VERSION
+
+    return VERSION.encode()

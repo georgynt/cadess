@@ -250,7 +250,6 @@ class DiadocAPI:
     def get_document_status(self, boxId: UUID, messageId: UUID, documentId: UUID) -> DocflowStatusModel|None:
         if isinstance(doc := self.get_document(boxId, messageId, documentId), DocumentV3):
             return doc.DocflowStatus.PrimaryStatus
-        return None
 
     async def aget_document_status(self, boxId: UUID, messageId: UUID, documentId: UUID) -> DocflowStatusModel|None:
         return await asyncio.to_thread(self.get_document_status, boxId, messageId, documentId)

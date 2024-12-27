@@ -1,10 +1,10 @@
 import asyncio
 import logging
 import multiprocessing
-import sys
 from asyncio import CancelledError
 from pathlib import Path
 
+import sys
 import uvicorn
 from fastapi import FastAPI
 
@@ -14,13 +14,12 @@ from db import create_tables
 from logger import formatter, info, logger
 from middleware import middleware
 from router import CadesLogic, router
-from sender import handle_documents, init_repeat_task
-
+from sender import init_repeat_task
 
 KEYFILE_NAME = './certs/server.key'
 CERTFILE_NAME = './certs/server.crt'
 
-
+VERSION='0.3.1'
 
 class UvicornServer(uvicorn.Server):
     # server: uvicorn.Server

@@ -62,6 +62,7 @@ async def send_document(doc: Document) -> bool:
         orgs = dda.get_orgs_by_innkpp(doc.dest_inn, doc.dest_kpp)
         if not len(orgs):
             doc.tries += 1
+            doc.error_msg = f"You can't send document to {doc.dest_inn}/{doc.dest_kpp}"
             return False
 
         org = orgs[0]
