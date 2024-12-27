@@ -9,6 +9,10 @@ from const import DiadocServiceStatus, DocumentStatus, ServiceStatus
 
 # CadesLogic() так делать нельзя. При установке/удалении сервиса происходит попытка считывания. Оно не надо
 
+class MsgResponse(BaseModel):
+    msg: str
+    details: str|dict|None = None
+
 class Cert(BaseModel):
     number: str
     name: str
