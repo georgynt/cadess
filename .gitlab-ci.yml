@@ -42,11 +42,14 @@ build docker:
           CERT_OWNER_CERT: "./certs/test2.pfx"
           CADES_VERSION_TAG: "${CADES_VERSION}.test"
     when: manual  
+    id_tokens:
+      ID_TOKEN:
+        aud: https://gitlab.atol.tech
     script:
         - export PROJECT_PATH="$CI_PROJECT_PATH"
         - echo $CI_PROJECT_PATH
         - export VAULT_ADDR=https://vault.atol.ru
-        - export VAULT_TOKEN="$(vault write -field=token auth/jwt/login role=gitlab jwt=$CI_JOB_JWT_V2)"
+        - export VAULT_TOKEN="$(vault write -field=token auth/jwt/login role=gitlab jwt=$ID_TOKEN)"
         - export ANSIBLE_TOKEN="$(vault token create -format=json -ttl=30m | jq -r ".auth.client_token")"
         - export LICENSE_CRYPTOPRO=$(vault kv get -field=LICENSE_CRYPTOPRO gitlab/$PROJECT_PATH)
         - export CERT_PASS=$(vault kv get -field=CERT_PASS gitlab/$PROJECT_PATH)
