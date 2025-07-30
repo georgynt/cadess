@@ -26,7 +26,7 @@ update files:
         - cd /etc/ansible-infra/
         - git clone https://"$DEPLOY_USER":"$DEPLOY_PASS"@gitlab.atol.tech/"$CI_PROJECT_PATH".git "$CI_PROJECT_NAME" || true
         - cd "$CI_PROJECT_NAME"
-        - git pull
+        - git pull https://"$DEPLOY_USER":"$DEPLOY_PASS"@gitlab.atol.tech/"$CI_PROJECT_PATH".git
 
 build docker:
     stage: build
@@ -37,6 +37,10 @@ build docker:
         variables:
           CERT_OWNER_CERT: "./certs/star.pfx"
           CADES_VERSION_TAG: "${CADES_VERSION}.star"
+      - if: '$CERT_OWNER == "zotov"'
+        variables:
+          CERT_OWNER_CERT: "./certs/zotov.pfx"
+          CADES_VERSION_TAG: "${CADES_VERSION}.zotov"
       - if: '$CERT_OWNER == "test"'
         variables:
           CERT_OWNER_CERT: "./certs/test2.pfx"
