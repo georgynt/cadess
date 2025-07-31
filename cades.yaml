@@ -5,7 +5,7 @@ diadoc:
   url: https://diadoc-api.kontur.ru
 settings:
   certificate-store: 2
-  certnumber: 120065EBD300F380191E79BF8200020065EBD3
+  certnumber: 025C94F60004B20FAE4F596A883C000E14
   fake-logic: false
   pincode: 12345
 users:
