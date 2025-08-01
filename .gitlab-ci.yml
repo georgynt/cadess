@@ -59,7 +59,7 @@ build docker:
         - export CERT_PASS=$(vault kv get -field=CERT_PASS gitlab/$PROJECT_PATH)
         - trap 'vault token revoke $ANSIBLE_TOKEN' ERR        
         - cd /etc/ansible-infra/"$CI_PROJECT_NAME"/
-        - sudo -E docker build . -t $CI_REGISTRY_IMAGE/pp-cadess:$CADES_VERSION_TAG  --build-arg LICENSE=$LICENSE_CRYPTOPRO --build-arg PFX_FILE=$CERT_OWNER_CERT --build-arg ROOT_PFX_FILE=certs/cert3.crt --build-arg PINCODE=$CERT_PASS
+        - sudo -E docker build . -t $CI_REGISTRY_IMAGE/pp-cadess:$CADES_VERSION_TAG  --build-arg LICENSE=$LICENSE_CRYPTOPRO --build-arg PFX_FILE=$CERT_OWNER_CERT --build-arg ROOT_PFX_FILE=certs/root.crt --build-arg PINCODE=$CERT_PASS
         - sudo -E docker login -u "$CI_REGISTRY_USER" -p "$CI_JOB_TOKEN" "$CI_REGISTRY"
         - sudo -E docker push $CI_REGISTRY_IMAGE/pp-cadess:$CADES_VERSION_TAG
         - vault token revoke $ANSIBLE_TOKEN
