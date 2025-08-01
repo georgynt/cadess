@@ -37,10 +37,20 @@ FROM ubuntu:22.04
 
 ARG PACKAGES
 
+ENV TZ="Europe/Moscow" \
+    docker="1"
+
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
+    echo $TZ > /etc/timezone
+
 ARG PINCODE
 ARG LICENSE
 ARG PFX_FILE
 ARG ROOT_PFX_FILE
+
+ENV LICENSE=$LICENSE \
+    PINCODE=$PINCODE
+
 
 RUN apt-get update && apt-get install -y --no-install-recommends $PACKAGES
 
@@ -60,11 +70,11 @@ COPY --from=builder /opt/cprocsp/lib/amd64/pycades.so /cades/pycades.so
 RUN if [[ -n "$LICENSE" ]]; then /opt/cprocsp/sbin/amd64/cpconfig -license -set $LICENSE; fi
 
 COPY $PFX_FILE ./certs/signcert.pfx
-COPY $ROOT_PFX_FILE ./certs/rootcert.pfx
+COPY $ROOT_PFX_FILE ./certs/rootcert.crt
 
-RUN /opt/cprocsp/bin/amd64/certmgr -install -pfx -file ./certs/signcert.pfx -newpin $PINCODE
-RUN /opt/cprocsp/bin/amd64/certmgr -install -store mRoot -f ./certs/rootcert.pfx
-
+RUN /opt/cprocsp/bin/amd64/certmgr -install -pfx -file ./certs/signcert.pfx -newpin $PINCODE -pin $PINCODE
+#RUN /opt/cprocsp/bin/amd64/certmgr -install -store mRoot -f ./certs/rootcert.crt
+RUN /opt/cprocsp/bin/amd64/certmgr -inst -store mRoot -f $ROOT_PFX_FILE
 
 RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1
