@@ -39,7 +39,7 @@ build docker:
           CADES_VERSION_TAG: "${CADES_VERSION}.star"
       - if: '$CERT_OWNER == "zotov"'
         variables:
-          CERT_OWNER_CERT: "./certs/zotov.pfx"
+          CERT_OWNER_CERT: "./certs/Zotov.pfx"
           CADES_VERSION_TAG: "${CADES_VERSION}.zotov"
       - if: '$CERT_OWNER == "test"'
         variables:
