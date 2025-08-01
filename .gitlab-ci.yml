@@ -68,6 +68,7 @@ push container:
     stage: push
     tags:
         - backoffice
+    when: manual
     rules:
       - if: '$HOSTS == "prod"'
         variables:
