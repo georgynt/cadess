@@ -1,9 +1,8 @@
-FROM ubuntu:22.04 as builder
-
 ARG PACKAGES="python3.11 unzip python3-pip apt-transport-https ca-certificates sqlite3 pcscd libusb-1.0-0 libusb-0.1-4 udev postgresql-client postgresql-common"
 
+FROM ubuntu:22.04 as builder
 
-RUN echo $PACKAGES
+ARG PACKAGES
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
       gcc cmake build-essential libboost-dev libxml2-dev \
@@ -36,8 +35,7 @@ RUN ln -s /opt/cprocsp/lib/amd64/pycades.so /cades/pycades.so
 
 FROM ubuntu:22.04
 
-ARG PACKAGES="python3.11 unzip python3-pip apt-transport-https ca-certificates sqlite3 pcscd libusb-1.0-0 libusb-0.1-4 udev postgresql-client postgresql-common"
-
+ARG PACKAGES
 
 ENV TZ="Europe/Moscow" \
     docker="1"
@@ -76,7 +74,7 @@ COPY $ROOT_PFX_FILE ./certs/rootcert.crt
 
 RUN /opt/cprocsp/bin/amd64/certmgr -install -pfx -file ./certs/signcert.pfx -newpin $PINCODE -pin $PINCODE
 #RUN /opt/cprocsp/bin/amd64/certmgr -install -store mRoot -f ./certs/rootcert.crt
-RUN /opt/cprocsp/bin/amd64/certmgr -inst -store mRoot -f ./certs/rootcert.crt
+RUN /opt/cprocsp/bin/amd64/certmgr -inst -store mRoot -f $ROOT_PFX_FILE
 
 RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1
