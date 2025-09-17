@@ -37,6 +37,10 @@ build docker:
         variables:
           CERT_OWNER_CERT: "./certs/star.pfx"
           CADES_VERSION_TAG: "${CADES_VERSION}.star"
+      - if: '$CERT_OWNER == "saitova"'
+        variables:
+          CERT_OWNER_CERT: "./certs/Saitova.pfx"
+          CADES_VERSION_TAG: "${CADES_VERSION}.saitova"
       - if: '$CERT_OWNER == "zotov"'
         variables:
           CERT_OWNER_CERT: "./certs/Zotov.pfx"
