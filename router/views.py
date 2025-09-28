@@ -247,20 +247,28 @@ async def check_relationship_inn_kpp(srcboxid: str|UUID, inn: str, kpp: str|None
     try:
         dd = AuthdDiadocAPI()
         if len(orgs := await dd.aget_orgs_by_innkpp(inn, kpp)):
-            org = orgs[0]
-            box = org.Boxes[0]
-            if boxid := box.BoxIdGuid:
-                if isinstance(ctg := await dd.aget_ctg(srcboxid, boxid), str):
+
+            for org in orgs:
+                if org.IsActive:
+                    box = org.Boxes[0]
+                    if boxid := box.BoxIdGuid:
+                        if isinstance(ctg := await dd.aget_ctg(srcboxid, boxid), str):
+                            continue
+
+                        return RelationStatus(srcboxid=srcboxid,
+                                              dstboxid=boxid,
+                                              status=ctg.CurrentStatus,
+                                              established=ctg.CurrentStatus == CounteragentStatus.IsMyCounteragent)
+                    break
+            else:
+                if 'boxid' in locals():
                     return RelationStatus(
                         srcboxid=srcboxid,
                         dstboxid=boxid,
                         status=CounteragentStatus.NotInCounteragentList,
                         established=False
                     )
-                return RelationStatus(srcboxid=srcboxid,
-                                      dstboxid=boxid,
-                                      status=ctg.CurrentStatus,
-                                      established=ctg.CurrentStatus == CounteragentStatus.IsMyCounteragent)
+                return MsgResponse(msg='Active organization not found')
         else:
             logger.warning(f"COntragent not found. INN={inn}, KPP={kpp}")
             return MsgResponse(msg="Contragent by INN/KPP not found")
@@ -281,7 +289,7 @@ async def connected_contragents(srcboxid: str|UUID) -> list[Contragent]:
                        name=c.Organization.FullName,
                        status=c.CurrentStatus,
                        established=c.CurrentStatus == CounteragentStatus.IsMyCounteragent)
-            for c in ctgs
+            for c in ctgs if c.IsActive
         ]
     elif isinstance(ctgs, str):
         return []
