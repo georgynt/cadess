@@ -15,6 +15,7 @@ from logic import Logic, LogicMock, NoAvailableCertificateException
 from router.types import *
 from sender import send_document
 
+
 __cades = None
 
 
