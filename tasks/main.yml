@@ -1,0 +1,32 @@
+---
+- name: Get variables
+  local_action:
+    module: set_fact
+    DOCKER_IMAGE: "{{ lookup('ansible.builtin.env', 'DOCKER_IMAGE') }}"
+    REGISTRY_USER: "{{ lookup('ansible.builtin.env', 'REGISTRY_USER') }}"
+    JOB_TOKEN: "{{ lookup('ansible.builtin.env', 'JOB_TOKEN') }}"
+
+- debug:
+    msg: "DOCKER_IMAGE: {{ DOCKER_IMAGE }}"
+
+- name: login
+  ansible.builtin.shell:
+    cmd: docker login -u {{ REGISTRY_USER }} -p {{ JOB_TOKEN }} reg.atol.tech
+
+- name: Pull Docker image
+  ansible.builtin.shell:
+    cmd: docker pull {{ DOCKER_IMAGE }}
+
+#- name: Pull Docker image
+##  community.docker.docker_image:
+#    name: "{{ DOCKER_IMAGE }}"
+#    state: present
+- name: create docker-compose.yaml
+  template:
+      src: docker-compose.yaml.j2
+      dest: /opt/cades/docker-compose.yaml
+
+- name: start Docker
+  ansible.builtin.shell:
+    cmd: docker compose down && docker compose up -d
+    chdir: '/opt/cades/'

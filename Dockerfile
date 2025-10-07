@@ -74,7 +74,7 @@ COPY $ROOT_PFX_FILE ./certs/rootcert.crt
 
 RUN /opt/cprocsp/bin/amd64/certmgr -install -pfx -file ./certs/signcert.pfx -newpin $PINCODE -pin $PINCODE
 #RUN /opt/cprocsp/bin/amd64/certmgr -install -store mRoot -f ./certs/rootcert.crt
-RUN /opt/cprocsp/bin/amd64/certmgr -inst -store mRoot -f $ROOT_PFX_FILE
+RUN /opt/cprocsp/bin/amd64/certmgr -inst -store mRoot -f ./certs/rootcert.crt
 
 RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1

@@ -1,0 +1,99 @@
+---
+variables:
+  HOSTS:
+    description: "Для заливки контейнера на хосты Биллинга указываем значение prod или stage или dev"
+    value: "none"
+  CADES_VERSION:
+    description: "указать версию контейнера"
+    value: "0.1"
+  CERT_OWNER:
+    description: "при сборке контейнера указать какой пробрасывать сертификат, по-умолчанию тестовый. Указать star, для сертификата Старовойтова"
+    value: "test"
+
+
+stages:
+  - update
+  - build
+  - push
+
+
+update files:
+    stage: update
+    tags:
+        - backoffice   
+    script:
+        
+        - cd /etc/ansible-infra/
+        - git clone https://"$DEPLOY_USER":"$DEPLOY_PASS"@gitlab.atol.tech/"$CI_PROJECT_PATH".git "$CI_PROJECT_NAME" || true
+        - cd "$CI_PROJECT_NAME"
+        - git pull https://"$DEPLOY_USER":"$DEPLOY_PASS"@gitlab.atol.tech/"$CI_PROJECT_PATH".git
+
+build docker:
+    stage: build
+    tags:
+        - backoffice
+    rules:
+      - if: '$CERT_OWNER == "star"'
+        variables:
+          CERT_OWNER_CERT: "./certs/star.pfx"
+          CADES_VERSION_TAG: "${CADES_VERSION}.star"
+      - if: '$CERT_OWNER == "saitova"'
+        variables:
+          CERT_OWNER_CERT: "./certs/Saitova.pfx"
+          CADES_VERSION_TAG: "${CADES_VERSION}.saitova"
+      - if: '$CERT_OWNER == "zotov"'
+        variables:
+          CERT_OWNER_CERT: "./certs/Zotov.pfx"
+          CADES_VERSION_TAG: "${CADES_VERSION}.zotov"
+      - if: '$CERT_OWNER == "test"'
+        variables:
+          CERT_OWNER_CERT: "./certs/test2.pfx"
+          CADES_VERSION_TAG: "${CADES_VERSION}.test"
+    when: manual  
+    id_tokens:
+      ID_TOKEN:
+        aud: https://gitlab.atol.tech
+    script:
+        - export PROJECT_PATH="$CI_PROJECT_PATH"
+        - echo $CI_PROJECT_PATH
+        - export VAULT_ADDR=https://vault.atol.ru
+        - export VAULT_TOKEN="$(vault write -field=token auth/jwt/login role=gitlab jwt=$ID_TOKEN)"
+        - export ANSIBLE_TOKEN="$(vault token create -format=json -ttl=30m | jq -r ".auth.client_token")"
+        - export LICENSE_CRYPTOPRO=$(vault kv get -field=LICENSE_CRYPTOPRO gitlab/$PROJECT_PATH)
+        - export CERT_PASS=$(vault kv get -field=CERT_PASS gitlab/$PROJECT_PATH)
+        - trap 'vault token revoke $ANSIBLE_TOKEN' ERR        
+        - cd /etc/ansible-infra/"$CI_PROJECT_NAME"/
+        - sudo -E docker build . -t $CI_REGISTRY_IMAGE/pp-cadess:$CADES_VERSION_TAG  --build-arg LICENSE=$LICENSE_CRYPTOPRO --build-arg PFX_FILE=$CERT_OWNER_CERT --build-arg ROOT_PFX_FILE=certs/root.crt --build-arg PINCODE=$CERT_PASS
+        - sudo -E docker login -u "$CI_REGISTRY_USER" -p "$CI_JOB_TOKEN" "$CI_REGISTRY"
+        - sudo -E docker push $CI_REGISTRY_IMAGE/pp-cadess:$CADES_VERSION_TAG
+        - vault token revoke $ANSIBLE_TOKEN
+
+push container:
+    stage: push
+    tags:
+        - backoffice
+    when: manual
+    rules:
+      - if: '$HOSTS == "prod"'
+        variables:
+          ANS_HOSTS: "billing_web"
+          DOCKER_IMAGE: "${CI_REGISTRY_IMAGE}/pp-cadess:${CADES_VERSION}.${CERT_OWNER}"
+      - if: '$HOSTS == "stage"'
+        variables:
+          ANS_HOSTS: "billing_web_stage"
+          DOCKER_IMAGE: "${CI_REGISTRY_IMAGE}/pp-cadess:${CADES_VERSION}.${CERT_OWNER}"
+      - if: '$HOSTS == "dev"'
+        variables:
+          ANS_HOSTS: "billing_dev"
+          DOCKER_IMAGE: "${CI_REGISTRY_IMAGE}/pp-cadess:${CADES_VERSION}.test"
+#      - if: '$HOSTS != "none"'
+    script:
+      - export ANS_HOSTS="$ANS_HOSTS"
+      - export DOCKER_IMAGE="$DOCKER_IMAGE"
+      - export REGISTRY_USER="$CI_REGISTRY_USER"
+      - export JOB_TOKEN="$CI_JOB_TOKEN"
+      - cd /etc/ansible-infra/
+      - echo $ANS_HOSTS
+      - echo $DOCKER_IMAGE
+      - ansible-playbook docker-cades.yaml -l "$ANS_HOSTS" -e "DOCKER_IMAGE=$DOCKER_IMAGE"
+
