@@ -81,7 +81,7 @@ push container:
       - if: '$HOSTS == "stage"'
         variables:
           ANS_HOSTS: "billing_web_stage"
-          DOCKER_IMAGE: "${CI_REGISTRY_IMAGE}/pp-cadess:${CADES_VERSION}.test"
+          DOCKER_IMAGE: "${CI_REGISTRY_IMAGE}/pp-cadess:${CADES_VERSION}.${CERT_OWNER}"
       - if: '$HOSTS == "dev"'
         variables:
           ANS_HOSTS: "billing_dev"
