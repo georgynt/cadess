@@ -5,6 +5,7 @@ from uuid import UUID
 
 from requests import Response, Session
 
+from diadoc.enums import CounteragentStatus
 from diadoc.exceptions import AuthError
 from diadoc.struct import (Counteragent, CounteragentList, DocflowStatusModel, DocumentId, DocumentV3,
                            GetDocflowBatchRequest, GetDocflowRequest, Message, MessageToPost, Organization,
@@ -254,6 +255,30 @@ class DiadocAPI:
     async def aget_document_status(self, boxId: UUID, messageId: UUID, documentId: UUID) -> DocflowStatusModel|None:
         return await asyncio.to_thread(self.get_document_status, boxId, messageId, documentId)
 
+    def get_actual_ctg_innkpp(self,
+                              srcboxid: UUID|str,
+                              inn: str|None = None,
+                              kpp: str|None = None) -> tuple[Counteragent|None, UUID|str|None]:
+        """Достать нужного контрагента для обмена сообщениями"""
+        ctg = boxid = None
+        if len(orgs := self.get_orgs_by_innkpp(inn, kpp)):
+            for org in orgs:
+                if org.IsActive:
+                    for box in org.Boxes:
+                        if boxid := box.BoxIdGuid:
+                            if isinstance(ctg := self.get_ctg(srcboxid, boxid), str):
+                                continue
+                            elif isinstance(ctg, Counteragent):
+                                if ctg.CurrentStatus == CounteragentStatus.IsMyCounteragent:
+                                    return ctg, boxid
+        return None, boxid
+
+    async def aget_actual_ctg_innkpp(self,
+                                     srcboxid: UUID | str,
+                                     inn: str | None = None,
+                                     kpp: str | None = None) -> tuple[Counteragent | None, UUID | str | None]:
+        return await asyncio.to_thread(self.get_actual_ctg_innkpp, srcboxid, inn, kpp)
+
 
 class ConfiguredDiadocAPI(DiadocAPI):
     def __init__(self):
@@ -276,3 +301,4 @@ class AuthdDiadocAPI(ConfiguredDiadocAPI):
 
     def reauthenticate(self) -> bool:
         return super().authenticate(self.auth_c.login, self.auth_c.password)
+

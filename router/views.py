@@ -247,32 +247,23 @@ async def check_relationship_inn_kpp(srcboxid: str|UUID, inn: str, kpp: str|None
 
     try:
         dd = AuthdDiadocAPI()
-        if len(orgs := await dd.aget_orgs_by_innkpp(inn, kpp)):
 
-            for org in orgs:
-                if org.IsActive:
-                    box = org.Boxes[0]
-                    if boxid := box.BoxIdGuid:
-                        if isinstance(ctg := await dd.aget_ctg(srcboxid, boxid), str):
-                            continue
-
-                        return RelationStatus(srcboxid=srcboxid,
-                                              dstboxid=boxid,
-                                              status=ctg.CurrentStatus,
-                                              established=ctg.CurrentStatus == CounteragentStatus.IsMyCounteragent)
-                    break
-            else:
-                if 'boxid' in locals():
-                    return RelationStatus(
-                        srcboxid=srcboxid,
-                        dstboxid=boxid,
-                        status=CounteragentStatus.NotInCounteragentList,
-                        established=False
-                    )
-                return MsgResponse(msg='Active organization not found')
+        ctg, boxid = await dd.aget_actual_ctg_innkpp(srcboxid, inn, kpp)
+        if ctg:
+            return RelationStatus(srcboxid=srcboxid,
+                                  dstboxid=boxid,
+                                  status=ctg.CurrentStatus,
+                                  established=ctg.CurrentStatus == CounteragentStatus.IsMyCounteragent)
+        elif boxid:
+            return RelationStatus(
+                srcboxid=srcboxid,
+                dstboxid=boxid,
+                status=CounteragentStatus.NotInCounteragentList,
+                established=False
+            )
         else:
-            logger.warning(f"COntragent not found. INN={inn}, KPP={kpp}")
-            return MsgResponse(msg="Contragent by INN/KPP not found")
+            logger.warning(msg := f"Active Contragent not found. INN={inn}, KPP={kpp}")
+            return MsgResponse(msg=msg)
     except Exception as ex:
         logger.error(f"Can't get edo status: {ex}")
         return MsgResponse(msg=f'Error: {ex}')
