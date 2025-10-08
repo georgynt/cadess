@@ -60,61 +60,61 @@ async def send_document(doc: Document) -> bool:
     sbox = doc.source_box
     if not (dbox := doc.dest_box):
 
-        ctg, boxid = await dda.aget_actual_ctg_innkpp(sbox, doc.dest_inn, doc.dest_kpp)
+        ctg, dbox = await dda.aget_actual_ctg_innkpp(sbox, doc.dest_inn, doc.dest_kpp)
 
         if not ctg:
             doc.tries += 1
             doc.error_msg = f"You can't send document to {doc.dest_inn}/{doc.dest_kpp}"
             return False
-        else:
-            try:
-                sc = SignedContent(Content=doc.signed_data,
-                                   Signature=doc.sign,
-                                   SignWithTestSignature=conf.test_sign)
 
-                da = DocumentAttachment(
-                    SignedContent=sc,
-                    TypeNamedId=DiadocDocumentType.ProformaInvoice,
-                    Metadata=[
-                        MetadataItem(Key='FileName', Value=doc.name),
-                        MetadataItem(Key='DocumentNumber', Value=doc.number),
-                        MetadataItem(Key="DocumentDate", Value=doc.date_as_str),
-                        MetadataItem(Key="Grounds", Value=doc.name),
-                        MetadataItem(Key="TotalSum", Value=str(doc.amount)),
-                        MetadataItem(Key="TotalVat", Value=str(doc.vat))]
-                )
+    try:
+        sc = SignedContent(Content=doc.signed_data,
+                           Signature=doc.sign,
+                           SignWithTestSignature=conf.test_sign)
 
-                postmsg = MessageToPost(
-                    FromBoxId=str(sbox),
-                    ToBoxId=dbox,
-                    DocumentAttachments=[da]
-                )
+        da = DocumentAttachment(
+            SignedContent=sc,
+            TypeNamedId=DiadocDocumentType.ProformaInvoice,
+            Metadata=[
+                MetadataItem(Key='FileName', Value=doc.name),
+                MetadataItem(Key='DocumentNumber', Value=doc.number),
+                MetadataItem(Key="DocumentDate", Value=doc.date_as_str),
+                MetadataItem(Key="Grounds", Value=doc.name),
+                MetadataItem(Key="TotalSum", Value=str(doc.amount)),
+                MetadataItem(Key="TotalVat", Value=str(doc.vat))]
+        )
 
-                if isinstance(msg := await dda.apost_message(postmsg), Message):
-                    logger.info(msg)
-                    doc.status = DocumentStatus.SENT  # тут надо сделать проверку, какой ответ получили
-                    doc.error_msg = None
-                    doc.send_time = datetime.now()
-                    doc.message_id = UUID(msg.MessageId)
-                    if ent := next((e for e in msg.Entities if e['EntityType'] == 'Attachment'), None):
-                        doc.entity_id = UUID(ent.get('EntityId', None))
-                        doc_struct = DocumentV3.parse_obj(ent.get("DocumentInfo", {}))
-                        doc.diadoc_status = doc_struct.DocflowStatus.PrimaryStatus.Severity
-                        doc.diadoc_status_descr = doc_struct.DocflowStatus.PrimaryStatus.StatusText
-                        return True
+        postmsg = MessageToPost(
+            FromBoxId=str(sbox),
+            ToBoxId=dbox,
+            DocumentAttachments=[da]
+        )
 
-                elif isinstance(msg, Response):
-                    if msg.status_code not in (200, 201):
-                        logger.error(msg.content)
-                        doc.status = DocumentStatus.FAIL
-                        doc.error_msg = msg.content
-                        return True
-                    else:
-                        logger.info(msg.content)
-            except Exception as e:
-                doc.tries += 1
-                doc.error_msg = str(e)
-                logger.error(doc.error_msg)
+        if isinstance(msg := await dda.apost_message(postmsg), Message):
+            logger.info(msg)
+            doc.status = DocumentStatus.SENT  # тут надо сделать проверку, какой ответ получили
+            doc.error_msg = None
+            doc.send_time = datetime.now()
+            doc.message_id = UUID(msg.MessageId)
+            if ent := next((e for e in msg.Entities if e['EntityType'] == 'Attachment'), None):
+                doc.entity_id = UUID(ent.get('EntityId', None))
+                doc_struct = DocumentV3.parse_obj(ent.get("DocumentInfo", {}))
+                doc.diadoc_status = doc_struct.DocflowStatus.PrimaryStatus.Severity
+                doc.diadoc_status_descr = doc_struct.DocflowStatus.PrimaryStatus.StatusText
+                return True
+
+        elif isinstance(msg, Response):
+            if msg.status_code not in (200, 201):
+                logger.error(msg.content)
+                doc.status = DocumentStatus.FAIL
+                doc.error_msg = msg.content
+                return True
+            else:
+                logger.info(msg.content)
+    except Exception as e:
+        doc.tries += 1
+        doc.error_msg = str(e)
+        logger.error(doc.error_msg)
 
     return False
 
