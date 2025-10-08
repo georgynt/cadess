@@ -191,6 +191,7 @@ async def senddoc(item: DocumentRequest) -> SignedResponse:
                         setattr(doc, k, v)
                     doc.sign = sign
                     doc.signed_data = item.data
+                    doc.tries = 0
 
                     ss.add(doc)
                     await ss.commit()
