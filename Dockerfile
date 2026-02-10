@@ -6,8 +6,9 @@ ARG PACKAGES
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
       gcc cmake build-essential libboost-dev libxml2-dev \
-       python3.11-dev git $PACKAGES && \
+      python3 python3-dev python3.11-dev git $PACKAGES && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
+
 
 WORKDIR /cades
 
@@ -27,6 +28,7 @@ RUN cd /tmp/arch && tar -xf linux-amd64_deb.tgz && \
 RUN dpkg -i /tmp/arch/linux-amd64_deb/cprocsp-pki-cades-64*.deb
 WORKDIR /tmp/src
 RUN git clone https://github.com/CryptoPro/pycades.git pycades
+RUN sed -i '1i set(Python_INCLUDE_DIR "/usr/include/python3.11")' pycades/CMakeLists.txt
 RUN cd pycades && mkdir build && cd build && cmake .. && make -j4
 
 RUN cp /tmp/src/pycades/build/pycades.so /opt/cprocsp/lib/amd64/pycades.so
