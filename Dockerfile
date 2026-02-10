@@ -27,7 +27,7 @@ RUN cd /tmp/arch && tar -xf linux-amd64_deb.tgz && \
 RUN dpkg -i /tmp/arch/linux-amd64_deb/cprocsp-pki-cades-64*.deb
 WORKDIR /tmp/src
 RUN git clone https://github.com/CryptoPro/pycades.git pycades
-RUN cd pycades && mkdir build && cd build && cmake .. && make -j4
+RUN cd pycades && mkdir build && cd build && cmake -DPython3_EXECUTABLE=/usr/bin/python3.11 .. && make -j4
 
 RUN cp /tmp/src/pycades/build/pycades.so /opt/cprocsp/lib/amd64/pycades.so
 RUN ln -s /opt/cprocsp/lib/amd64/pycades.so /cades/pycades.so
