@@ -15,7 +15,7 @@ from diadoc.connector import AuthdDiadocAPI
 from diadoc.enums import DiadocDocumentType
 from diadoc.exceptions import AuthError
 from diadoc.struct import (Counteragent, DocumentAttachment, DocumentV3, Message, MessageToPost, MetadataItem,
-                           SignedContent)
+                           PowerOfAttorneyFullId, PowerOfAttorneyToPost, SignedContent)
 
 
 async def run_callbacks(doc: Document):
@@ -68,9 +68,18 @@ async def send_document(doc: Document) -> bool:
             return False
 
     try:
+        poa: PowerOfAttorneyToPost|None = None
+        if poa_full_id := conf.attorney.get('reg-num'):
+            poa_inn = conf.attorney['inn']
+            poa_repr_inn = conf.attorney['pepresentative-inn']
+            poa = PowerOfAttorneyToPost(FullId=PowerOfAttorneyFullId(RegistrationNumber=poa_full_id,
+                                                                     IssuerInn=poa_inn,
+                                                                     RepresentativeInn=poa_repr_inn))
+
         sc = SignedContent(Content=doc.signed_data,
                            Signature=doc.sign,
-                           SignWithTestSignature=conf.test_sign)
+                           SignWithTestSignature=conf.test_sign,
+                           PowerOfAttorney=poa)
 
         da = DocumentAttachment(
             SignedContent=sc,

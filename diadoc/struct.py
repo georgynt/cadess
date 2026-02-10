@@ -22,13 +22,13 @@ class StructuredDataAttachment(CadesStruct):
 class DocumentId(CadesStruct):
     MessageId: UUID
     # MessageId: str
-    EntityId: UUID|None = None
+    EntityId: UUID | None = None
     # EntityId: str
 
 
 class CustomDataItem(CadesStruct):
     Key: str
-    Value: Optional[str] = None
+    Value: str | None = None
 
 
 class MetadataItem(CadesStruct):
@@ -36,47 +36,73 @@ class MetadataItem(CadesStruct):
     Value: str
 
 
+class PowerOfAttorneyFullId(CadesStruct):
+    RegistrationNumber: str
+    IssuerInn: str
+    RepresentativeInn: str
+
+
+class Content_v3(CadesStruct):
+    Content: bytes | None
+    NameOnShelf: str | None
+    EntityId: DocumentId | None
+    PatchedContentId: str | None
+
+
+class PowerOfAttorneySignedContent(CadesStruct):
+    Content: Content_v3
+    Signature: Content_v3
+
+
+class PowerOfAttorneyToPost(CadesStruct):
+    FullId: PowerOfAttorneyFullId | None = None
+    UseDefault: bool = False
+    # Content: PowerOfAttorneySignedContent | None = None # deprecated. use Contents
+    SendAsFile: bool | None = None
+    Contents: list[PowerOfAttorneySignedContent] = []
+    UseDocumentContent: bool | None = None
+
+
 class SignedContent(CadesStruct):
-    Content: Optional[bytes] = None
-    Signature: Optional[bytes] = None
-    NameOnShelf: Optional[str] = None
-    SignWithTestSignature: Optional[bool] = False
-    SignatureNameOnShelf: Optional[str] = None
-    # Пока что bytes, потом доделаем. Там капец как много всяких структур
-    PowerOfAttorney: Optional[bytes] = None
+    Content: bytes | None = None
+    Signature: bytes | None = None
+    NameOnShelf: str | None = None
+    SignWithTestSignature: bool | None = False
+    SignatureNameOnShelf: str | None = None
+    PowerOfAttorney: PowerOfAttorneyToPost | None = None
 
 
 class DocumentAttachment(CadesStruct):
     SignedContent: SignedContent
-    Comment: Optional[str] = None
+    Comment: str | None = None
     NeedRecipientSignature: bool = False
     InitialDocumentIds: Optional[list[DocumentId]] = None
     SubordinateDocumentIds: Optional[list[DocumentId]] = None
-    CustomDocumentId: Optional[str] = None
+    CustomDocumentId: str | None = None
     NeedReceipt: bool = False
     CustomData: Optional[list[CustomDataItem]] = None
     TypeNamedId: str
-    Function: Optional[str] = None
-    Version: Optional[str] = None
+    Function: str | None = None
+    Version: str | None = None
     Metadata: list[MetadataItem]
-    WorkflowId: Optional[int] = None
+    WorkflowId: int | None = None
     IsEncrypted: bool = False
-    EditingSettingId: Optional[str] = None
+    EditingSettingId: str | None = None
 
 
 class MessageToPost(CadesStruct):
     FromBoxId: str
     ToBoxId: str
-    StructuredDataAttachments: Optional[list[StructuredDataAttachment|DocumentAttachment]] = None
-    ToDepartmentId: Optional[str] = None
+    StructuredDataAttachments: Optional[list[StructuredDataAttachment | DocumentAttachment]] = None
+    ToDepartmentId: str | None = None
     IsDraft: bool = False
     LockDraft: bool = False
     StrictDraftValidation: bool = True
     IsInternal: bool = False
-    FromDepartmentId: Optional[str] = None
+    FromDepartmentId: str | None = None
     DelaySend: bool = False
-    ProxyBoxId: Optional[str] = None
-    ProxyDepartmentId: Optional[str] = None
+    ProxyBoxId: str | None = None
+    ProxyDepartmentId: str | None = None
     LockPacket: bool = False
     DocumentAttachments: Optional[list[DocumentAttachment]] = None
     LockMode: LockModeEnum = LockModeEnum.NONE
@@ -88,32 +114,32 @@ class Message(CadesStruct):
     LastPatchTimestampTicks: int
     FromBoxId: str
     FromTitle: str
-    ToBoxId: Optional[str] = None
-    ToTitle: Optional[str] = None
+    ToBoxId: str | None = None
+    ToTitle: str | None = None
     Entities: list[dict]
     IsDraft: bool = False
     DraftIsLocked: bool = False
     DraftIsRecycled: bool = False
-    CreatedFromDraftId: Optional[str] = None
+    CreatedFromDraftId: str | None = None
     DraftIsTransformedToMessageIdList: list[str]
     IsDeleted: bool = False
     IsTest: bool = False
     IsInternal: bool = False
     IsProxified: bool = False
-    ProxyBoxId: Optional[str] = None
-    ProxyTitle: Optional[str] = None
+    ProxyBoxId: str | None = None
+    ProxyTitle: str | None = None
     PacketIsLocked: bool = False
-    LockMode: Optional[LockModeEnum|str] = None
+    LockMode: Optional[LockModeEnum | str] = None
     MessageType: object
-    TemplateToLetterTransformationInfo: Optional[Any] = None
+    TemplateToLetterTransformationInfo: Any | None = None
     IsReusable: bool = False
 
 
 class Box(CadesStruct):
     BoxId: str
     Title: str
-    Organization: Optional[dict] = None
-    InvoiceFormatVersion: Optional[OrganizationInvoiceFormatVersion] = OrganizationInvoiceFormatVersion.v5_02
+    Organization: dict | None = None
+    InvoiceFormatVersion: OrganizationInvoiceFormatVersion | None = OrganizationInvoiceFormatVersion.v5_02
     EncryptedDocumentsAllowed: bool = False
     BoxIdGuid: str
 
@@ -121,29 +147,29 @@ class Box(CadesStruct):
 class Organization(CadesStruct):
     OrgId: str
     Inn: str
-    Kpp: Optional[str] = None
+    Kpp: str | None = None
     FullName: str
-    ShortName: Optional[str] = None
+    ShortName: str | None = None
     Boxes: Optional[list[Box]] = None
-    Ogrn: Optional[str] = None
-    FnsParticipantId: Optional[str] = None
-    Address: Optional[dict] = None
-    FnsRegistrationDate: Optional[str] = None
+    Ogrn: str | None = None
+    FnsParticipantId: str | None = None
+    Address: dict | None = None
+    FnsRegistrationDate: str | None = None
     Departments: Optional[list[dict]] = None
-    IfnsCode: Optional[str] = None
-    IsPilot: Optional[bool] = None
-    IsActive: Optional[bool] = None
-    IsTest: Optional[bool] = None
-    IsBranch: Optional[bool] = None
-    IsRoaming: Optional[bool] = None
-    IsEmployee: Optional[bool] = None
-    InvitationCount: Optional[int] = None
-    SearchCount: Optional[int] = None
-    Sociability: dict|str
-    LiquidationDate: Optional[str] = None
-    CertificateOfRegistryInfo: Optional[str] = None
-    IsForeign: Optional[bool] = None
-    HasCertificateToSign: Optional[bool] = None
+    IfnsCode: str | None = None
+    IsPilot: bool | None = None
+    IsActive: bool | None = None
+    IsTest: bool | None = None
+    IsBranch: bool | None = None
+    IsRoaming: bool | None = None
+    IsEmployee: bool | None = None
+    InvitationCount: int | None = None
+    SearchCount: int | None = None
+    Sociability: dict | str
+    LiquidationDate: str | None = None
+    CertificateOfRegistryInfo: str | None = None
+    IsForeign: bool | None = None
+    HasCertificateToSign: bool | None = None
 
 
 class OrganizationList(CadesStruct):
@@ -151,23 +177,25 @@ class OrganizationList(CadesStruct):
 
 
 class Counteragent(CadesStruct):
-    IndexKey: Optional[str] = None
+    IndexKey: str | None = None
     Organization: Organization
-    CurrentStatus: Optional[CounteragentStatus] = CounteragentStatus.UnknownCounteragentStatus
+    CurrentStatus: CounteragentStatus | None = CounteragentStatus.UnknownCounteragentStatus
     LastEventTimestampTicks: float
-    MessageFromCounteragent: Optional[str] = None
-    MessageToCounteragent: Optional[str] = None
-    InvitationDocumentId: Optional[DocumentId] = None
-    CounteragentGroupId: Optional[str] = None
+    MessageFromCounteragent: str | None = None
+    MessageToCounteragent: str | None = None
+    InvitationDocumentId: DocumentId | None = None
+    CounteragentGroupId: str | None = None
+
 
 class CounteragentList(CadesStruct):
     TotalCount: int
     Counteragents: list[Counteragent]
     TotalCountType: str
 
+
 class GetDocflowRequest(CadesStruct):
     DocumentId: DocumentId
-    LastEventId: str|None = None
+    LastEventId: str | None = None
     InjectEntityContent: bool = False
 
 
@@ -176,15 +204,15 @@ class GetDocflowBatchRequest(CadesStruct):
 
 
 class DocflowStatusModel(CadesStruct):
-    Severity: Optional[str] = None
-    StatusText: Optional[str] = None
+    Severity: str | None = None
+    StatusText: str | None = None
 
 
 class DocflowStatus(CadesStruct):
     PrimaryStatus: DocflowStatusModel
-    SecondaryStatus: Optional[DocflowStatusModel] = None
-    PowerOfAttorneyGeneralStatus: Optional[dict] = None
-    GeneralRoamingSendingStatus: Optional[dict] = None
+    SecondaryStatus: DocflowStatusModel | None = None
+    PowerOfAttorneyGeneralStatus: dict | None = None
+    GeneralRoamingSendingStatus: dict | None = None
 
 
 class DocumentV3(CadesStruct):

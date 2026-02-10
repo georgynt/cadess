@@ -37,7 +37,12 @@ default_config_object = {
         "password": None
     },
     "callbacks": None,
-    "db-connection-string": f"sqlite+aiosqlite:///{join(get_installation_dir(), 'cades.db')}"
+    "db-connection-string": f"sqlite+aiosqlite:///{join(get_installation_dir(), 'cades.db')}",
+    "power-of-attorney": {
+        "reg-num": '8294d513-fc13-4315-b644-fcf5b3781547',
+        'inn': '1234567890',
+        'pepresentative-inn': '0987654321'
+    }
 }
 
 
@@ -53,6 +58,11 @@ class Config(FileSystemEventHandler, metaclass=Singleton):
             self._data = default_config_object
         else:
             self.refresh()
+            for key, value in default_config_object.items():
+                if key not in self._data:
+                    self._data[key] = value
+            self.save()
+
         super().__init__()
         self.observer = Observer()
         if workon_win():
@@ -99,6 +109,11 @@ class Config(FileSystemEventHandler, metaclass=Singleton):
     @property
     def auth_disabled(self) -> bool:
         return self.settings.get('auth') == 'disabled'
+
+    @property
+    def attorney(self) -> dict:
+        """power of attorney"""
+        return self.settings.get('power-of-attorney') or {}
 
     @property
     def fake_logic(self) -> bool:
