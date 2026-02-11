@@ -53,7 +53,8 @@ ARG ROOT_PFX_FILE
 ARG CADES_VERSION_TAG
 
 ENV LICENSE=$LICENSE \
-    PINCODE=$PINCODE
+    PINCODE=$PINCODE \
+    CADES_VERSION_TAG=$CADES_VERSION_TAG
 
 
 RUN apt-get update && apt-get install -y --no-install-recommends $PACKAGES
@@ -103,4 +104,4 @@ COPY ./singleton.py .
 COPY ./tools.py .
 COPY ./cades.default.yaml ./cades.yaml
 
-RUN sed -ri "s/VERSION=.+$/VERSION='$CADES_VERSION_TAG'/g" apisrv.py
+RUN if [[ -n "$CADES_VERSION_TAG" ]]; then sed -ri "s/VERSION=.+$/VERSION='$CADES_VERSION_TAG'/g" apisrv.py; fi
