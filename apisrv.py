@@ -19,7 +19,7 @@ from sender import init_repeat_task
 KEYFILE_NAME = './certs/server.key'
 CERTFILE_NAME = './certs/server.crt'
 
-VERSION='0.3.1'
+VERSION='0.3.2.2.test'
 
 class UvicornServer(uvicorn.Server):
     # server: uvicorn.Server
