@@ -103,4 +103,4 @@ COPY ./singleton.py .
 COPY ./tools.py .
 COPY ./cades.default.yaml ./cades.yaml
 
-RUN sed -ri "s/VERSION=.+$/VERSION='$CADES_VERSION_TAG'" apisrv.py
+RUN sed -ri "s/VERSION=.+$/VERSION='$CADES_VERSION_TAG'/g" apisrv.py
