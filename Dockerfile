@@ -50,6 +50,7 @@ ARG PINCODE
 ARG LICENSE
 ARG PFX_FILE
 ARG ROOT_PFX_FILE
+ARG CADES_VERSION_TAG
 
 ENV LICENSE=$LICENSE \
     PINCODE=$PINCODE
@@ -101,3 +102,5 @@ COPY ./sender.py .
 COPY ./singleton.py .
 COPY ./tools.py .
 COPY ./cades.default.yaml ./cades.yaml
+
+RUN sed -ri "s/VERSION=.+$/VERSION='$CADES_VERSION_TAG'"
