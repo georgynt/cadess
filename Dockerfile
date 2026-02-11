@@ -9,11 +9,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       python3 python3-dev python3.11-dev libpython3.11-dev git $PACKAGES && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-
 WORKDIR /cades
 
 RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1
+RUN update-alternatives --install /usr/bin/python3-config python3-config /usr/bin/python3.11-config 1
+RUN update-alternatives --install /usr/bin/python-config python-config /usr/bin/python3.11-config 1
 
 COPY ./reqs.txt .
 RUN pip install --upgrade pip
@@ -28,12 +29,12 @@ RUN cd /tmp/arch && tar -xf linux-amd64_deb.tgz && \
 RUN dpkg -i /tmp/arch/linux-amd64_deb/cprocsp-pki-cades-64*.deb
 WORKDIR /tmp/src
 RUN git clone https://github.com/CryptoPro/pycades.git pycades
-RUN sed -i '1i set(Python_INCLUDE_DIR "/usr/include/python3.11")' pycades/CMakeLists.txt
+#RUN sed -i 's/set\(Python_INCLUDE_DIR "/usr/include/python3.11")' pycades/CMakeLists.txt
+RUN sed -ri 's/SET\(Python_INCLUDE_DIR.+$/SET(Python_INCLUDE_DIR "\/usr\/include\/python3.11")/gI' pycades/CMakeLists.txt
 RUN cd pycades && mkdir build && cd build && cmake .. && make -j4
 
 RUN cp /tmp/src/pycades/build/pycades.so /opt/cprocsp/lib/amd64/pycades.so
 RUN ln -s /opt/cprocsp/lib/amd64/pycades.so /cades/pycades.so
-
 
 FROM ubuntu:22.04
 
