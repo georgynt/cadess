@@ -113,7 +113,7 @@ class Config(FileSystemEventHandler, metaclass=Singleton):
     @property
     def attorney(self) -> dict:
         """power of attorney"""
-        return self.settings.get('power-of-attorney') or {}
+        return self._data.get('power-of-attorney') or {}
 
     @property
     def fake_logic(self) -> bool:
