@@ -288,6 +288,46 @@ async def connected_contragents(srcboxid: str|UUID) -> list[Contragent]:
         return []
 
 
+@router.post("/documents/{uuid}/delete", tags=['documents'])
+async def delete_document(uuid: UUID) -> MsgResponse:
+    """Отметить указанный документ как удалённый в Диадоке"""
+    try:
+        async with Session() as ss:
+            if doc := (await ss.execute(select(Document).where(Document.uuid == uuid))).scalar():
+                dd = AuthdDiadocAPI()
+                if await dd.adelete_document(doc.source_box, doc.message_id, doc.entity_id):
+                    return MsgResponse(msg="Документ успешно отмечен как удалённый")
+                else:
+                    raise HTTPException(500, "Не удалось отметить документ как удалённый")
+            else:
+                raise HTTPException(404, "Документ не найден")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Delete document error: {e}")
+        raise HTTPException(500, str(e))
+
+
+@router.post("/documents/{uuid}/restore", tags=['documents'])
+async def restore_document(uuid: UUID) -> MsgResponse:
+    """Восстановить документ из удалённых в Диадоке"""
+    try:
+        async with Session() as ss:
+            if doc := (await ss.execute(select(Document).where(Document.uuid == uuid))).scalar():
+                dd = AuthdDiadocAPI()
+                if await dd.arestore_document(doc.source_box, doc.message_id, doc.entity_id):
+                    return MsgResponse(msg="Документ успешно восстановлен из удалённых")
+                else:
+                    raise HTTPException(500, "Не удалось восстановить документ из удалённых")
+            else:
+                raise HTTPException(404, "Документ не найден")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Restore document error: {e}")
+        raise HTTPException(500, str(e))
+
+
 @router.get('/version', tags=['version'])
 async def version() -> bytes:
     """Отдать версию из файлика. Если файлика нет - отдать 0.1"""
