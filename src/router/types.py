@@ -81,3 +81,9 @@ class Contragent(BaseModel):
     name: str
     status: str
     established: bool
+
+
+class DocumentActionRequest(BaseModel):
+    boxId: UUID
+    messageId: UUID
+    documentId: UUID | None = None

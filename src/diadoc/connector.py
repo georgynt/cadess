@@ -279,6 +279,34 @@ class DiadocAPI:
                                      kpp: str | None = None) -> tuple[Counteragent | None, UUID | str | None]:
         return await asyncio.to_thread(self.get_actual_ctg_innkpp, srcboxid, inn, kpp)
 
+    def delete_document(self, boxId: UUID, messageId: UUID, documentId: UUID | None = None) -> bool:
+        """Отметить указанный документ как удалённый"""
+        params = {
+            "boxId"    : str(boxId),
+            "messageId": str(messageId),
+        }
+        if documentId is not None:
+            params["documentId"] = str(documentId)
+        res = self.sess.post("/Delete", params=params)
+        return res.status_code in SUCCESS_CODES
+
+    async def adelete_document(self, boxId: UUID, messageId: UUID, documentId: UUID | None = None) -> bool:
+        return await asyncio.to_thread(self.delete_document, boxId, messageId, documentId)
+
+    def restore_document(self, boxId: UUID, messageId: UUID, documentId: UUID | None = None) -> bool:
+        """Восстановить документ из удалённых"""
+        params = {
+            "boxId"    : str(boxId),
+            "messageId": str(messageId),
+        }
+        if documentId is not None:
+            params["documentId"] = str(documentId)
+        res = self.sess.post("/Restore", params=params)
+        return res.status_code in SUCCESS_CODES
+
+    async def arestore_document(self, boxId: UUID, messageId: UUID, documentId: UUID | None = None) -> bool:
+        return await asyncio.to_thread(self.restore_document, boxId, messageId, documentId)
+
 
 class ConfiguredDiadocAPI(DiadocAPI):
     def __init__(self):
