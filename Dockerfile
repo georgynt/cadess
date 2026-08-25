@@ -36,7 +36,7 @@ RUN sed -ri 's/SET\(Python_INCLUDE_DIR.+$/SET(Python_INCLUDE_DIR "\/usr\/include
 RUN cd pycades && \
     make || make rebuild-library
 
-RUN cp /tmp/src/pycades/build/pycades.so /opt/cprocsp/lib/amd64/pycades.so && \
+RUN cp /tmp/src/pycades/build/src/pycades/pycades.so /opt/cprocsp/lib/amd64/pycades.so && \
     ln -s /opt/cprocsp/lib/amd64/pycades.so /cades/pycades.so
 
 FROM repo.atol.ru/docker-remote/ubuntu:22.04
