@@ -22,7 +22,7 @@ include:
       build-buildah-additional-args: >-
         --build-arg LICENSE=${LICENSE_CRYPTOPRO}
         --build-arg PFX_FILE=${CERT_OWNER}
-        --build-arg ROOT_PFX_FILE=certs/root.crt
+        --build-arg ROOT_PFX_FILE=root.crt
         --build-arg PINCODE=${CERT_PASS}
         --build-arg CADES_VERSION_TAG=$${CADES_VERSION_TAG}
       build-login-repos:

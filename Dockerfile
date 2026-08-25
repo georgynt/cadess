@@ -78,8 +78,8 @@ COPY --from=builder /opt/cprocsp/lib/amd64/pycades.so /cades/pycades.so
 
 RUN if [[ -n "${LICENSE}" ]]; then /opt/cprocsp/sbin/amd64/cpconfig -license -set ${LICENSE}; fi
 
-COPY certs/${PFX_FILE} ./certs/signcert.pfx
-COPY ${ROOT_PFX_FILE} ./certs/rootcert.crt
+COPY certs/${PFX_FILE}.pfx ./certs/signcert.pfx
+COPY certs/${ROOT_PFX_FILE} ./certs/rootcert.crt
 
 RUN /opt/cprocsp/bin/amd64/certmgr -install -pfx -file ./certs/signcert.pfx -newpin ${PINCODE} -pin ${PINCODE} && \
     /opt/cprocsp/bin/amd64/certmgr -inst -store mRoot -f ./certs/rootcert.crt
