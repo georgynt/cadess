@@ -5,7 +5,7 @@ default:
 variables:
   CADES_VERSION:
     description: "CAdES version"
-    value: "0.1"
+    value: "0.3.2.2"
   CERT_OWNER:
     description: "Certificate owner"
     value: "test"
