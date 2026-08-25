@@ -80,6 +80,8 @@ RUN if [[ -n "${LICENSE}" ]]; then /opt/cprocsp/sbin/amd64/cpconfig -license -se
 
 COPY certs/${PFX_FILE}.pfx ./certs/signcert.pfx
 COPY certs/${ROOT_PFX_FILE} ./certs/rootcert.crt
+COPY certs/server.crt certs/server.crt
+COPY certs/server.key certs/server.key
 
 RUN /opt/cprocsp/bin/amd64/certmgr -install -pfx -file ./certs/signcert.pfx -newpin ${PINCODE} -pin ${PINCODE} && \
     /opt/cprocsp/bin/amd64/certmgr -inst -store mRoot -f ./certs/rootcert.crt
