@@ -3,6 +3,9 @@ default:
     - backoffice-kubernetes
 
 variables:
+  CADES_VERSION:
+    description: "CAdES version"
+    value: "0.1"
   CERT_OWNER:
     description: "Certificate owner"
     value: "test"
@@ -18,13 +21,13 @@ include:
     file: .gitlab-ci-buildah-image-build.yml
     inputs:
       build-image-name: ${CI_PROJECT_NAME}
-      build-image-tag: ${CI_COMMIT_SHA}-${CERT_OWNER}
+      build-image-tag: ${CADES_VERSION}-${CERT_OWNER}
       build-buildah-additional-args: >-
         --build-arg LICENSE=${LICENSE_CRYPTOPRO}
         --build-arg PFX_FILE=${CERT_OWNER}
         --build-arg ROOT_PFX_FILE=root.crt
         --build-arg PINCODE=${CERT_PASS}
-        --build-arg CADES_VERSION_TAG=$${CADES_VERSION_TAG}
+        --build-arg CADES_VERSION_TAG=${CADES_VERSION}
       build-login-repos:
         - ["repo.atol.ru/docker-local", "${REPO_USER}", "${REPO_TOKEN}"]
       build-push-repos:
