@@ -116,7 +116,18 @@ async def send_document(doc: Document) -> bool:
             if msg.status_code not in (200, 201):
                 logger.error(msg.content)
                 doc.status = DocumentStatus.FAIL
-                doc.error_msg = msg.content
+
+                try:
+                    if isinstance(msg.content, bytes):
+                        content = msg.content.decode('UTF-8')
+                    elif isinstance(msg.content, str):
+                        content = msg.content
+                    else:
+                        content = "Can't decode error from DIADOC!"
+                except Exception as e:
+                    content = "Can't decode error from DIADOC!"
+
+                doc.error_msg = content
                 return True
             else:
                 logger.info(msg.content)
