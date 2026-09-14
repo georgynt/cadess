@@ -93,7 +93,20 @@ COPY requirements.txt .
 RUN pip install --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-COPY src/ .
+COPY ./certs ./certs
+COPY ./diadoc ./diadoc
+COPY ./router ./router
+COPY ./apisrv.py .
+COPY ./backends.py .
+COPY ./config.py .
+COPY ./const.py .
+COPY ./db.py .
+COPY ./logger.py .
+COPY ./logic.py .
+COPY ./middleware.py .
+COPY ./sender.py .
+COPY ./singleton.py .
+COPY ./tools.py .
 COPY ./cades.default.yaml ./cades.yaml
 
 RUN if [[ -n "${CADES_VERSION_TAG}" ]]; then sed -ri "s/VERSION=.+$/VERSION='${CADES_VERSION_TAG}'/g" apisrv.py; fi
