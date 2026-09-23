@@ -11,6 +11,8 @@ from const import DocumentStatusRus
 from db import Document, Session
 from diadoc.connector import AuthdDiadocAPI, DiadocAPI
 from diadoc.enums import CounteragentStatus
+from diadoc.struct import (MessagePatchToPostV2, RevocationRequestAttachment, RevocationRequestInfo,
+                           SignedContent, Signer, SignerDetails)
 from logic import Logic, LogicMock, NoAvailableCertificateException
 from router.types import *
 from sender import send_document
@@ -325,6 +327,63 @@ async def restore_document(uuid: UUID) -> MsgResponse:
         raise
     except Exception as e:
         logger.error(f"Restore document error: {e}")
+        raise HTTPException(500, str(e))
+
+
+@router.post("/documents/{uuid}/revoke", tags=['documents'])
+async def revoke_document(uuid: UUID, request: RevocationRequest) -> MsgResponse:
+    """Сгенерировать, подписать и отправить предложение об аннулировании документа в Диадоке"""
+    try:
+        async with Session() as ss:
+            if doc := (await ss.execute(select(Document).where(Document.uuid == uuid))).scalar():
+                dd = AuthdDiadocAPI()
+                cfg = Config()
+
+                signer = None
+                if request.signer:
+                    signer = Signer(SignerDetails=SignerDetails(
+                        Surname=request.signer.surname,
+                        FirstName=request.signer.first_name,
+                        Patronymic=request.signer.patronymic,
+                        Inn=request.signer.inn,
+                    ))
+                info = RevocationRequestInfo(Comment=request.comment, Signer=signer)
+
+                xml = await dd.agenerate_revocation_request_xml(doc.source_box,
+                                                                doc.message_id,
+                                                                doc.entity_id,
+                                                                request.contentTypeId,
+                                                                info)
+                if xml is None:
+                    raise HTTPException(500, "Не удалось сгенерировать предложение об аннулировании")
+
+                # Подписываем XML-файл предложения об аннулировании
+                cades = CadesLogic()
+                signature = cades.sign_data(xml, cfg.pincode)
+
+                # Отправляем подписанное предложение об аннулировании через PostMessagePatch
+                patch = MessagePatchToPostV2(
+                    BoxId=str(doc.source_box),
+                    MessageId=str(doc.message_id),
+                    RevocationRequests=[
+                        RevocationRequestAttachment(
+                            ParentEntityId=str(doc.entity_id),
+                            SignedContent=SignedContent(Content=xml.encode(),
+                                                        Signature=signature),
+                        )
+                    ],
+                )
+                res = await dd.apost_message_patch(patch)
+                if res is not None:
+                    return MsgResponse(msg="Предложение об аннулировании отправлено",
+                                       details=res)
+                raise HTTPException(500, "Не удалось отправить предложение об аннулировании")
+            else:
+                raise HTTPException(404, "Документ не найден")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Revoke document error: {e}")
         raise HTTPException(500, str(e))
 
 

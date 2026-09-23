@@ -82,8 +82,20 @@ class Contragent(BaseModel):
     status: str
     established: bool
 
-
 class DocumentActionRequest(BaseModel):
     boxId: UUID
     messageId: UUID
     documentId: UUID | None = None
+
+
+class RevocationSigner(BaseModel):
+    surname: str
+    first_name: str
+    patronymic: str | None = None
+    inn: str | None = None
+
+
+class RevocationRequest(BaseModel):
+    comment: str | None = None
+    signer: RevocationSigner | None = None
+    contentTypeId: str = "revocation_request_02"

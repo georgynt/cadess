@@ -8,8 +8,8 @@ from requests import Response, Session
 from diadoc.enums import CounteragentStatus
 from diadoc.exceptions import AuthError
 from diadoc.struct import (Counteragent, CounteragentList, DocflowStatusModel, DocumentId, DocumentV3,
-                           GetDocflowBatchRequest, GetDocflowRequest, Message, MessageToPost, Organization,
-                           OrganizationList)
+                           GetDocflowBatchRequest, GetDocflowRequest, Message, MessagePatchToPostV2,
+                           MessageToPost, Organization, OrganizationList, RevocationRequestInfo)
 from singleton import Singleton
 
 
@@ -279,6 +279,7 @@ class DiadocAPI:
                                      kpp: str | None = None) -> tuple[Counteragent | None, UUID | str | None]:
         return await asyncio.to_thread(self.get_actual_ctg_innkpp, srcboxid, inn, kpp)
 
+
     def delete_document(self, boxId: UUID, messageId: UUID, documentId: UUID | None = None) -> bool:
         """Отметить указанный документ как удалённый"""
         params = {
@@ -307,6 +308,46 @@ class DiadocAPI:
     async def arestore_document(self, boxId: UUID, messageId: UUID, documentId: UUID | None = None) -> bool:
         return await asyncio.to_thread(self.restore_document, boxId, messageId, documentId)
 
+
+    def generate_revocation_request_xml(self,
+                                        boxId: UUID,
+                                        messageId: UUID,
+                                        attachmentId: UUID,
+                                        contentTypeId: str,
+                                        info: RevocationRequestInfo | None = None) -> str | None:
+        """Сгенерировать файл предложения об аннулировании документа.
+        Возвращает XML-файл предложения об аннулировании, либо None при ошибке."""
+        params = {
+            "boxId"       : str(boxId),
+            "messageId"   : str(messageId),
+            "attachmentId": str(attachmentId),
+            "contentTypeId": contentTypeId,
+        }
+        data = info.model_dump_json() if info else None
+        res = self.sess.post("/V2/GenerateRevocationRequestXml", params=params, data=data)
+        if res.status_code in SUCCESS_CODES:
+            return res.content.decode('utf-8', errors='replace')
+        return None
+
+    async def agenerate_revocation_request_xml(self,
+                                               boxId: UUID,
+                                               messageId: UUID,
+                                               attachmentId: UUID,
+                                               contentTypeId: str,
+                                               info: RevocationRequestInfo | None = None) -> str | None:
+        return await asyncio.to_thread(self.generate_revocation_request_xml,
+                                       boxId, messageId, attachmentId, contentTypeId, info)
+
+    def post_message_patch(self, patch: MessagePatchToPostV2) -> dict | None:
+        """Отправить дополнение к сообщению (например, предложение об аннулировании).
+        Возвращает словарь с данными MessagePatch, либо None при ошибке."""
+        res = self.sess.post("/V4/PostMessagePatch", data=patch.model_dump_json())
+        if res.status_code in SUCCESS_CODES:
+            return res.json()
+        return None
+
+    async def apost_message_patch(self, patch: MessagePatchToPostV2) -> dict | None:
+        return await asyncio.to_thread(self.post_message_patch, patch)
 
 class ConfiguredDiadocAPI(DiadocAPI):
     def __init__(self):

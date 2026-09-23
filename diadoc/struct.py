@@ -217,3 +217,37 @@ class DocflowStatus(CadesStruct):
 
 class DocumentV3(CadesStruct):
     DocflowStatus: DocflowStatus
+
+
+class SignerDetails(CadesStruct):
+    """Данные подписанта для предложения об аннулировании"""
+    Surname: str
+    FirstName: str
+    Patronymic: str | None = None
+    Inn: str | None = None
+    Inn: str | None = None
+
+
+class Signer(CadesStruct):
+    """Подписант предложения об аннулировании"""
+    SignerDetails: SignerDetails
+
+
+class RevocationRequestInfo(CadesStruct):
+    """Данные для генерации предложения об аннулировании документа"""
+    Comment: str | None = None
+    Signer: Signer | None = None
+
+
+class RevocationRequestAttachment(CadesStruct):
+    """Предложение об аннулировании для отправки через PostMessagePatch"""
+    ParentEntityId: str
+    SignedContent: SignedContent
+    Labels: list[str] | None = None
+
+
+class MessagePatchToPostV2(CadesStruct):
+    """Дополнение к сообщению для отправки методом PostMessagePatch (V4)"""
+    BoxId: str
+    MessageId: str
+    RevocationRequests: list[RevocationRequestAttachment] | None = None
