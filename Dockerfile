@@ -111,4 +111,4 @@ COPY ./cades.default.yaml ./cades.yaml
 
 RUN if [[ -n "${CADES_VERSION_TAG}" ]]; then sed -ri "s/VERSION=.+$/VERSION='${CADES_VERSION_TAG}'/g" apisrv.py; fi
 
-ENTRYPOINT ["python", "apisrv.py"]
+#ENTRYPOINT ["python", "apisrv.py"]
