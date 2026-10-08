@@ -37,3 +37,5 @@ typing-inspect==0.9.0
 typing_extensions==4.12.2
 aiohttp==3.10.5
 asyncpg==0.30.0
+sqlalchemy-file==0.6.0
+fasteners==0.20

@@ -1,5 +1,6 @@
 ARG PACKAGES="curl python3.11 unzip python3-pip apt-transport-https ca-certificates sqlite3 pcscd libusb-1.0-0 libusb-0.1-4 udev postgresql-client postgresql-common"
 FROM repo.atol.ru/docker-remote/ubuntu:22.04 AS builder
+
 ARG PACKAGES
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -32,8 +33,7 @@ WORKDIR /tmp/src
 
 RUN git clone https://github.com/CryptoPro/pycades.git pycades
 RUN sed -ri 's/SET\(Python_INCLUDE_DIR.+$/SET(Python_INCLUDE_DIR "\/usr\/include\/python3.11")/gI' pycades/CMakeLists.txt
-RUN cd pycades && \
-    make || make rebuild-library
+RUN cd pycades && make || make rebuild-library
 
 RUN cp /tmp/src/pycades/build/src/pycades/pycades.so /opt/cprocsp/lib/amd64/pycades.so && \
     ln -s /opt/cprocsp/lib/amd64/pycades.so /cades/pycades.so

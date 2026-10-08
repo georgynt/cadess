@@ -1,15 +1,35 @@
+import os
+
 from sqlalchemy import (BINARY, Column, DECIMAL, Date, DateTime, NullPool, QueuePool, String, Uuid, create_engine, Enum,
                         INT)
 from sqlalchemy.dialects.postgresql import BYTEA
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import declarative_base
 
+from sqlalchemy_file import File, FileField
+from sqlalchemy_file.storage import StorageManager
+from libcloud.storage.drivers.s3 import S3StorageDriver
+from libcloud.storage.drivers.local import LocalStorageDriver
+
 from config import Config
 from const import DocumentStatus
 
-cfg = Config()
 
+cfg = Config()
 Base = declarative_base()
+
+if (s3key := cfg.s3conf.get("key")) and (s3secret := cfg.s3conf.get("secret")):
+    container = S3StorageDriver(s3key, s3secret,
+                                cfg.s3conf.get("secure", False),
+                                cfg.s3conf.get("host"),
+                                cfg.s3conf.get("port", 443),
+                                cfg.s3conf.get("region"),
+                                cfg.s3conf.get("token"))
+else:
+    os.makedirs("/tmp/uploads", mode=0o755, exist_ok=True)
+    container = LocalStorageDriver("/tmp").get_container("uploads")
+
+StorageManager.add_storage("default", container)
 
 if 'postgre' in cfg.dbscheme or 'pg' in cfg.dbscheme:
     BINARY = BYTEA
@@ -19,6 +39,7 @@ else:
     engine = create_async_engine(cfg.dbcnxstr)
     Session = async_sessionmaker(engine, expire_on_commit=True)
 
+
 class Document(Base):
     __tablename__ = 'documents'
     # IDS
@@ -27,9 +48,9 @@ class Document(Base):
     entity_id = Column(Uuid())
     # source\dest
     source_box = Column(Uuid(), nullable=False)
-    dest_box = Column(Uuid()) # Может быть пустым, пока не нашли
-    dest_inn = Column(String(20)) # Может быть пустым! (а если передали dest_box?)
-    dest_kpp = Column(String(20)) # Может быть пустым у ИП
+    dest_box = Column(Uuid())  # Может быть пустым, пока не нашли
+    dest_inn = Column(String(20))  # Может быть пустым! (а если передали dest_box?)
+    dest_kpp = Column(String(20))  # Может быть пустым у ИП
     # doc requisites
     name = Column(String(128))
     number = Column(String(64))
@@ -40,8 +61,10 @@ class Document(Base):
     send_time = Column(DateTime())
     # content
     # data = Column(BINARY)
-    sign = Column(BINARY)
-    signed_data = Column(BINARY)
+    # sign = Column(BINARY)
+    # signed_data = Column(BINARY)
+    sign = Column(FileField())
+    signed_data = Column(FileField())
     # lifecycle
     status = Column(Enum(DocumentStatus), default=DocumentStatus.RECEIVED, nullable=False)
     tries = Column(INT, default=0, nullable=False)
@@ -64,12 +87,14 @@ class Document(Base):
         return f"<Document uuid={self.uuid} name={self.name} number={self.number} status={self.status}>"
 
 
-async def create_tables(eng=engine):
+async def create_tables(eng = engine):
     async with eng.begin() as cnx:
         await cnx.run_sync(Base.metadata.create_all)
 
+
 if __name__ == '__main__':
     import asyncio
+
 
     # alt_eng = create_async_engine(f"sqlite+aiosqlite:///{join('/opt/cades', 'cades.db')}")
     # alt_eng = create_async_engine(f"postgresql+asyncpg://cades:cades@localhost:5432/cades")

@@ -42,6 +42,15 @@ default_config_object = {
         "reg-num": '8294d513-fc13-4315-b644-fcf5b3781547',
         'inn': '1234567890',
         'pepresentative-inn': '0987654321'
+    },
+    "s3": {
+        "key": None,
+        "secret": None,
+        "secure": True,
+        "host": "localhost",
+        "port": 443,
+        "region": None,
+        "token": None
     }
 }
 
@@ -184,8 +193,13 @@ class Config(FileSystemEventHandler, metaclass=Singleton):
         return self._data.get('db-connection-string', f"sqlite+aiosqlite:///{join(get_installation_dir(), 'cades.db')}")
 
     @property
-    def certnumber(self) -> str:
+    def certnumber(self) -> str|None:
         return self.settings.get("certnumber", None)
+
+    @property
+    def s3conf(self) -> dict:
+        return self.settings.get('s3', {})
+
 
 if __name__ == '__main__':
     try:

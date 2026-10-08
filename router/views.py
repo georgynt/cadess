@@ -14,7 +14,8 @@ from diadoc.enums import CounteragentStatus
 from logic import Logic, LogicMock, NoAvailableCertificateException
 from router.types import *
 from sender import send_document
-
+from uuid import uuid4 as uuid # noqa
+from sqlalchemy_file import File # noqa
 
 __cades = None
 
@@ -189,8 +190,14 @@ async def senddoc(item: DocumentRequest) -> SignedResponse:
                     for k, v in dict(item).items():
                         if k in ['uuid', 'data']: continue
                         setattr(doc, k, v)
-                    doc.sign = sign
-                    doc.signed_data = item.data
+                    # doc.sign = sign
+                    # doc.signed_data = item.data
+                    doc.sign = File(content=sign,
+                                    filename=f'{doc.name}.sign',
+                                    content_type='application/base64')
+                    doc.signed_data = File(content=item.data,
+                                           filename=f'{doc.name}.data',
+                                           content_type='application/base64')
                     doc.tries = 0
 
                     ss.add(doc)
