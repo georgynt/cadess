@@ -228,7 +228,7 @@ class SignerDetails(CadesStruct):
     Inn: str | None = None
 
 
-class Signer(CadesStruct):
+class SignerType(CadesStruct):
     """Подписант предложения об аннулировании"""
     SignerDetails: SignerDetails
 
@@ -236,7 +236,7 @@ class Signer(CadesStruct):
 class RevocationRequestInfo(CadesStruct):
     """Данные для генерации предложения об аннулировании документа"""
     Comment: str | None = None
-    Signer: Signer | None = None
+    Signer: SignerType | None = None
 
 
 class RevocationRequestAttachment(CadesStruct):

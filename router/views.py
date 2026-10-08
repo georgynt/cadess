@@ -12,7 +12,7 @@ from db import Document, Session
 from diadoc.connector import AuthdDiadocAPI, DiadocAPI
 from diadoc.enums import CounteragentStatus
 from diadoc.struct import (MessagePatchToPostV2, RevocationRequestAttachment, RevocationRequestInfo,
-                           SignedContent, Signer, SignerDetails)
+                           SignedContent, SignerType, SignerDetails)
 from logic import Logic, LogicMock, NoAvailableCertificateException
 from router.types import *
 from sender import send_document
@@ -341,7 +341,7 @@ async def revoke_document(uuid: UUID, request: RevocationRequest) -> MsgResponse
 
                 signer = None
                 if request.signer:
-                    signer = Signer(SignerDetails=SignerDetails(
+                    signer = SignerType(SignerDetails=SignerDetails(
                         Surname=request.signer.surname,
                         FirstName=request.signer.first_name,
                         Patronymic=request.signer.patronymic,
